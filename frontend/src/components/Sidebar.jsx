@@ -1,14 +1,28 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { C } from '../style/theme'
+import { getUsuario, logout } from '../services/authService'
 
 const links = [
-  { to: '/dashboard',  icon: '', label: 'Dashboard', end: true },
-  { to: '/inventario', icon: '', label: 'Inventario' },
-  { to: '/pedidos',    icon: '', label: 'Pedidos'    },
+  { to: '/dashboard',  icon: '📊', label: 'Dashboard',  end: true },
+  { to: '/inventario', icon: '📦', label: 'Inventario'  },
+  { to: '/pedidos',    icon: '🚚', label: 'Pedidos'     },
 ]
 
 export default function Sidebar() {
+  const navigate  = useNavigate()
+  const usuario   = getUsuario()
+
+  // Iniciales para el avatar
+  const initials  = usuario?.nombre
+    ? usuario.nombre.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
+    : 'SL'
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <aside style={{
       width: 220, minHeight: '100vh', background: C.white,
@@ -44,14 +58,42 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer */}
-      <div style={{ padding: '14px 20px', borderTop: `1px solid ${C.gray200}` }}>
+      {/* Footer — usuario logueado */}
+      <div style={{ padding: '14px 16px', borderTop: `1px solid ${C.gray200}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 13 }}>SL</div>
-          <div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.gray800 }}>SmartLogix</p>
-            <p style={{ margin: 0, fontSize: 11, color: C.gray400 }}>Admin</p>
+          {/* Avatar con iniciales */}
+          <div style={{
+            width: 34, height: 34, borderRadius: '50%', background: C.brand,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontWeight: 800, fontSize: 12, flexShrink: 0,
+          }}>
+            {initials}
           </div>
+
+          {/* Nombre y email */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.gray800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {usuario?.nombre || 'Usuario'}
+            </p>
+            <p style={{ margin: 0, fontSize: 11, color: C.gray400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {usuario?.email || ''}
+            </p>
+          </div>
+
+          {/* Botón cerrar sesión */}
+          <button
+            onClick={handleLogout}
+            title="Cerrar sesión"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: C.gray400, fontSize: 16, padding: 4, borderRadius: 6,
+              flexShrink: 0, transition: 'color .15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+            onMouseLeave={e => e.currentTarget.style.color = C.gray400}
+          >
+            ⏻
+          </button>
         </div>
       </div>
     </aside>
