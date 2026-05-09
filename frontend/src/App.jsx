@@ -1,10 +1,12 @@
 import React from 'react'
 import { Helmet } from 'react-helmet'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import Dashboard  from './components/Dashboard'
 import Inventario from './components/Inventario'
 import Pedidos    from './components/Pedidos'
+import Bodegas    from './components/Bodegas'
+import Tiendas    from './components/Tiendas'
 import Sidebar    from './components/Sidebar'
 import Landing    from './screens/Landing'
 import Registro   from './screens/Registro'
@@ -21,6 +23,8 @@ function AppLayout() {
           <Route path="/dashboard"  element={<Dashboard />}  />
           <Route path="/inventario" element={<Inventario />} />
           <Route path="/pedidos"    element={<Pedidos />}    />
+          <Route path="/bodegas"    element={<Bodegas />}    />
+          <Route path="/tiendas"    element={<Tiendas />}    />
         </Routes>
       </main>
     </div>

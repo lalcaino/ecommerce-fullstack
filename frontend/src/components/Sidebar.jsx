@@ -4,17 +4,18 @@ import { C } from '../style/theme'
 import { getUsuario, logout } from '../services/authService'
 
 const links = [
-  { to: '/dashboard',  icon: '📊', label: 'Dashboard',  end: true },
+  { to: '/dashboard',  icon: '📊', label: 'Dashboard'  },
   { to: '/inventario', icon: '📦', label: 'Inventario'  },
   { to: '/pedidos',    icon: '🚚', label: 'Pedidos'     },
+  { to: '/bodegas',    icon: '🏭', label: 'Bodegas'     },
+  { to: '/tiendas',    icon: '🏪', label: 'Tiendas'     },
 ]
 
 export default function Sidebar() {
-  const navigate  = useNavigate()
-  const usuario   = getUsuario()
+  const navigate = useNavigate()
+  const usuario  = getUsuario()
 
-  // Iniciales para el avatar
-  const initials  = usuario?.nombre
+  const initials = usuario?.nombre
     ? usuario.nombre.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
     : 'SL'
 
@@ -42,9 +43,15 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav style={{ padding: '12px 10px', flex: 1 }}>
-        <p style={{ fontSize: 10, fontWeight: 700, color: C.gray400, textTransform: 'uppercase', letterSpacing: '.8px', padding: '6px 10px', margin: '0 0 4px' }}>Menú</p>
-        {links.map(({ to, icon, label, end }) => (
-          <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
+        <p style={{
+          fontSize: 10, fontWeight: 700, color: C.gray400,
+          textTransform: 'uppercase', letterSpacing: '.8px',
+          padding: '6px 10px', margin: '0 0 4px',
+        }}>
+          Menú
+        </p>
+        {links.map(({ to, icon, label }) => (
+          <NavLink key={to} to={to} style={({ isActive }) => ({
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '9px 12px', borderRadius: 10, marginBottom: 2,
             fontWeight: 600, fontSize: 14, textDecoration: 'none',
@@ -58,10 +65,9 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer — usuario logueado */}
+      {/* Footer usuario */}
       <div style={{ padding: '14px 16px', borderTop: `1px solid ${C.gray200}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Avatar con iniciales */}
           <div style={{
             width: 34, height: 34, borderRadius: '50%', background: C.brand,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -69,18 +75,20 @@ export default function Sidebar() {
           }}>
             {initials}
           </div>
-
-          {/* Nombre y email */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.gray800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <p style={{
+              margin: 0, fontSize: 13, fontWeight: 700, color: C.gray800,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
               {usuario?.nombre || 'Usuario'}
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: C.gray400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <p style={{
+              margin: 0, fontSize: 11, color: C.gray400,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
               {usuario?.email || ''}
             </p>
           </div>
-
-          {/* Botón cerrar sesión */}
           <button
             onClick={handleLogout}
             title="Cerrar sesión"

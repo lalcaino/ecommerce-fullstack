@@ -1,13 +1,9 @@
-/**
- * api.js - Patrón Repository + Circuit Breaker para comunicación con BFF
- * Abstrae todos los accesos HTTP, permitiendo cambiar la implementación sin afectar la UI.
- */
 import axios from 'axios'
 import { getToken, refreshToken, logout } from './authService'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
-// ─── Circuit Breaker ────────────────────────────────────────────────────────
+// Circuit Breaker
 class CircuitBreaker {
   constructor(failureThreshold = 3, timeout = 10000) {
     this.failureCount     = 0
@@ -35,6 +31,7 @@ class CircuitBreaker {
   }
 
   _onSuccess() { this.failureCount = 0; this.state = 'CLOSED' }
+
   _onFailure() {
     this.failureCount++
     if (this.failureCount >= this.failureThreshold) {
@@ -46,7 +43,7 @@ class CircuitBreaker {
   getState() { return this.state }
 }
 
-// ─── HTTP Client base ────────────────────────────────────────────────────────
+// Cliente HTTP base
 const http = axios.create({
   baseURL: BASE_URL,
   timeout: 8000,
@@ -73,7 +70,6 @@ http.interceptors.response.use(
   res => res.data,
   async err => {
     const original = err.config
-
     if (err?.response?.status === 401 && !original._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -83,10 +79,8 @@ http.interceptors.response.use(
           return http(original)
         })
       }
-
-      original._retry  = true
-      isRefreshing     = true
-
+      original._retry = true
+      isRefreshing    = true
       try {
         const newToken = await refreshToken()
         processQueue(null, newToken)
@@ -101,14 +95,12 @@ http.interceptors.response.use(
         isRefreshing = false
       }
     }
-
     return Promise.reject(err?.response?.data || err)
   }
 )
 
-// ─── Repository: Inventario ─────────────────────────────────────────────────
+// Repository: Inventario
 const inventarioCB = new CircuitBreaker()
-
 export const InventarioRepository = {
   getAll:          ()         => inventarioCB.call(() => http.get('/inventario/')),
   getById:         (id)       => inventarioCB.call(() => http.get(`/inventario/${id}/`)),
@@ -118,20 +110,38 @@ export const InventarioRepository = {
   getCircuitState: ()         => inventarioCB.getState(),
 }
 
-// ─── Repository: Pedidos ─────────────────────────────────────────────────────
+// Repository: Pedidos
 const pedidosCB = new CircuitBreaker()
-
 export const PedidosRepository = {
-  getAll:          ()              => pedidosCB.call(() => http.get('/pedidos/')),
-  getById:         (id)            => pedidosCB.call(() => http.get(`/pedidos/${id}/`)),
-  create:          (data)          => pedidosCB.call(() => http.post('/pedidos/', data)),
-  updateEstado:    (id, estado)    => pedidosCB.call(() => http.patch(`/pedidos/${id}/`, { estado })),
-  getCircuitState: ()              => pedidosCB.getState(),
+  getAll:          ()           => pedidosCB.call(() => http.get('/pedidos/')),
+  getById:         (id)         => pedidosCB.call(() => http.get(`/pedidos/${id}/`)),
+  create:          (data)       => pedidosCB.call(() => http.post('/pedidos/', data)),
+  updateEstado:    (id, estado) => pedidosCB.call(() => http.patch(`/pedidos/${id}/`, { estado })),
+  getCircuitState: ()           => pedidosCB.getState(),
 }
 
-// ─── Repository: Dashboard ───────────────────────────────────────────────────
-const dashboardCB = new CircuitBreaker()
+// Repository: Bodegas
+const bodegasCB = new CircuitBreaker()
+export const BodegasRepository = {
+  getAll:  ()         => bodegasCB.call(() => http.get('/bodegas/')),
+  getById: (id)       => bodegasCB.call(() => http.get(`/bodegas/${id}/`)),
+  create:  (data)     => bodegasCB.call(() => http.post('/bodegas/', data)),
+  update:  (id, data) => bodegasCB.call(() => http.put(`/bodegas/${id}/`, data)),
+  delete:  (id)       => bodegasCB.call(() => http.delete(`/bodegas/${id}/`)),
+}
 
+// Repository: Tiendas
+const tiendasCB = new CircuitBreaker()
+export const TiendasRepository = {
+  getAll:  ()         => tiendasCB.call(() => http.get('/tiendas/')),
+  getById: (id)       => tiendasCB.call(() => http.get(`/tiendas/${id}/`)),
+  create:  (data)     => tiendasCB.call(() => http.post('/tiendas/', data)),
+  update:  (id, data) => tiendasCB.call(() => http.put(`/tiendas/${id}/`, data)),
+  delete:  (id)       => tiendasCB.call(() => http.delete(`/tiendas/${id}/`)),
+}
+
+// Repository: Dashboard
+const dashboardCB = new CircuitBreaker()
 export const DashboardRepository = {
   getSummary: () => dashboardCB.call(() => http.get('/dashboard/')),
 }
