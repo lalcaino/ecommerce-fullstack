@@ -1,30 +1,39 @@
-"""
-models.py — Microservicio de Pedidos SmartLogix
-Patrones:
-  - Repository: PedidoRepository abstrae todo acceso a datos.
-  - Factory Method: PedidoFactory crea pedidos con estructura inicial según tipo de cliente.
-"""
 from django.db import models
 from decimal import Decimal
 
 
 ESTADO_CHOICES = [
-    ('PENDIENTE',   'Pendiente'),
-    ('PROCESANDO',  'Procesando'),
-    ('ENVIADO',     'Enviado'),
-    ('ENTREGADO',   'Entregado'),
-    ('CANCELADO',   'Cancelado'),
+    ('PENDIENTE', 'Pendiente'),
+    ('PROCESANDO', 'Procesando'),
+    ('ENVIADO', 'Enviado'),
+    ('ENTREGADO', 'Entregado'),
+    ('CANCELADO', 'Cancelado'),
 ]
 
 
+class Tienda(models.Model):
+    nombre = models.CharField(max_length=200)
+    direccion = models.CharField(max_length=300)
+    ciudad = models.CharField(max_length=100)
+    activa = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+
 class Pedido(models.Model):
-    cliente        = models.CharField(max_length=200)
-    email_cliente  = models.EmailField()
-    estado         = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-    total          = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    notas          = models.TextField(blank=True)
+    cliente = models.CharField(max_length=200)
+    email_cliente = models.EmailField()
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+    total = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    notas = models.TextField(blank=True)
+    tienda = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_update   = models.DateTimeField(auto_now=True)
+    fecha_update = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-fecha_creacion']
@@ -34,11 +43,11 @@ class Pedido(models.Model):
 
 
 class ItemPedido(models.Model):
-    pedido         = models.ForeignKey(Pedido, related_name='items', on_delete=models.CASCADE)
-    producto_id    = models.PositiveIntegerField()
-    nombre_producto= models.CharField(max_length=200)
-    cantidad       = models.PositiveIntegerField(default=1)
-    precio_unitario= models.DecimalField(max_digits=12, decimal_places=2)
+    pedido = models.ForeignKey(Pedido, related_name='items', on_delete=models.CASCADE)
+    producto_id = models.PositiveIntegerField()
+    nombre_producto = models.CharField(max_length=200)
+    cantidad = models.PositiveIntegerField(default=1)
+    precio_unitario = models.DecimalField(max_digits=12, decimal_places=2)
 
     @property
     def subtotal(self):
@@ -48,23 +57,42 @@ class ItemPedido(models.Model):
         return f'{self.nombre_producto} x{self.cantidad}'
 
 
-# ─── Patrón Repository ────────────────────────────────────────────────────────
-class PedidoRepository:
-    """
-    Abstrae toda la lógica de persistencia de Pedido.
-    Las vistas nunca acceden al ORM directamente.
-    """
+# Repository de Tienda
+class TiendaRepository:
+    @staticmethod
+    def get_all():
+        return Tienda.objects.filter(activa=True)
 
+    @staticmethod
+    def get_by_id(pk):
+        return Tienda.objects.get(pk=pk)
+
+    @staticmethod
+    def create(data):
+        return Tienda.objects.create(**data)
+
+    @staticmethod
+    def update(pk, data):
+        Tienda.objects.filter(pk=pk).update(**data)
+        return Tienda.objects.get(pk=pk)
+
+    @staticmethod
+    def delete(pk):
+        Tienda.objects.filter(pk=pk).delete()
+
+
+# Repository de Pedido
+class PedidoRepository:
     @staticmethod
     def get_all():
         return Pedido.objects.prefetch_related('items').all()
 
     @staticmethod
-    def get_by_id(pk: int) -> Pedido:
+    def get_by_id(pk):
         return Pedido.objects.prefetch_related('items').get(pk=pk)
 
     @staticmethod
-    def create(data: dict) -> Pedido:
+    def create(data):
         items_data = data.pop('items', [])
         pedido = Pedido.objects.create(**data)
         total = Decimal('0.00')
@@ -77,29 +105,23 @@ class PedidoRepository:
         return pedido
 
     @staticmethod
-    def update_estado(pk: int, estado: str) -> Pedido:
+    def update_estado(pk, estado):
         Pedido.objects.filter(pk=pk).update(estado=estado)
         return Pedido.objects.get(pk=pk)
 
     @staticmethod
-    def get_by_estado(estado: str):
+    def get_by_estado(estado):
         return Pedido.objects.filter(estado=estado)
 
     @staticmethod
-    def delete(pk: int) -> None:
+    def delete(pk):
         Pedido.objects.filter(pk=pk).delete()
 
 
-# ─── Patrón Factory Method ────────────────────────────────────────────────────
+# Factory Method para crear pedidos según tipo
 class PedidoFactory:
-    """
-    Crea pedidos con configuración inicial según el tipo de cliente.
-    Facilita la extensión futura (e.g., cliente_vip, cliente_corporativo)
-    sin modificar el código existente (principio Open/Closed).
-    """
-
     @staticmethod
-    def crear_pedido_estandar(cliente: str, email: str, notas: str = '') -> dict:
+    def crear_pedido_estandar(cliente, email, notas=''):
         return {
             'cliente': cliente,
             'email_cliente': email,
@@ -108,16 +130,16 @@ class PedidoFactory:
         }
 
     @staticmethod
-    def crear_pedido_express(cliente: str, email: str) -> dict:
+    def crear_pedido_express(cliente, email):
         return {
             'cliente': cliente,
             'email_cliente': email,
-            'estado': 'PROCESANDO',  # inicia directamente en procesamiento
+            'estado': 'PROCESANDO',
             'notas': 'Pedido express — procesamiento prioritario',
         }
 
     @staticmethod
-    def crear_pedido_corporativo(cliente: str, email: str, notas: str = '') -> dict:
+    def crear_pedido_corporativo(cliente, email, notas=''):
         return {
             'cliente': cliente,
             'email_cliente': email,
@@ -126,11 +148,10 @@ class PedidoFactory:
         }
 
     @classmethod
-    def crear(cls, tipo: str, **kwargs) -> dict:
-        """Método de fábrica principal."""
+    def crear(cls, tipo, **kwargs):
         metodos = {
-            'estandar':    cls.crear_pedido_estandar,
-            'express':     cls.crear_pedido_express,
+            'estandar': cls.crear_pedido_estandar,
+            'express': cls.crear_pedido_express,
             'corporativo': cls.crear_pedido_corporativo,
         }
         factory_fn = metodos.get(tipo, cls.crear_pedido_estandar)
