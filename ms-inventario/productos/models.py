@@ -104,3 +104,4 @@ class ProductoRepository:
         from django.db.models import F
         Producto.objects.filter(pk=pk).update(stock=F('stock') + cantidad)
         return Producto.objects.get(pk=pk)
+    
