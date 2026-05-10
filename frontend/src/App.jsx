@@ -11,7 +11,7 @@ import Sidebar    from './components/Sidebar'
 import Landing    from './screens/Landing'
 import Registro   from './screens/Registro'
 import Login      from './screens/Login'
-import Envios from './componets/Envios'
+import Envios from './components/Envios'
 
 import './style/index.css'
 
