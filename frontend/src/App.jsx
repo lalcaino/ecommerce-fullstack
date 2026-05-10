@@ -11,6 +11,7 @@ import Sidebar    from './components/Sidebar'
 import Landing    from './screens/Landing'
 import Registro   from './screens/Registro'
 import Login      from './screens/Login'
+import Envios from './componets/Envios'
 
 import './style/index.css'
 
@@ -25,6 +26,7 @@ function AppLayout() {
           <Route path="/pedidos"    element={<Pedidos />}    />
           <Route path="/bodegas"    element={<Bodegas />}    />
           <Route path="/tiendas"    element={<Tiendas />}    />
+          <Route path="/envios"    element={<Envios />}    />
         </Routes>
       </main>
     </div>

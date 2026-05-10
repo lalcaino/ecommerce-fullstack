@@ -240,3 +240,133 @@ class DashboardView(APIView):
                 logger.warning('Dashboard tiendas error: %s', exc)
 
         return Response(summary)
+    
+class EnviosListView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def get(self, request):
+        try:
+            return Response(MicroserviceGateway.get_envios())
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+    def post(self, request):
+        try:
+            data = MicroserviceGateway.create_envio(request.data)
+            return Response(data, status=status.HTTP_201_CREATED)
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+class EnviosDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def get(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.get_envio(pk))
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+    def delete(self, request, pk):
+        try:
+            MicroserviceGateway.delete_envio(pk)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+class EnviosEstadoView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def patch(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.update_estado_envio(pk, request.data))
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+class EnviosPosicionView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def patch(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.update_posicion_envio(pk, request.data))
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+class EnviosRutaView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def patch(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.update_ruta_envio(pk, request.data))
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+class EnviosEnCursoView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def get(self, request):
+        try:
+            return Response(MicroserviceGateway.get_envios_en_curso())
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+class EnviosPorPedidoView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def get(self, request, pedido_id):
+        try:
+            return Response(MicroserviceGateway.get_envio_por_pedido(pedido_id))
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+class ParadaEstadoView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def patch(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.update_estado_parada(pk, request.data))
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+# Conductores
+class ConductoresListView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def get(self, request):
+        try:
+            solo_disponibles = request.query_params.get('disponibles') == 'true'
+            return Response(MicroserviceGateway.get_conductores(solo_disponibles))
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+    def post(self, request):
+        try:
+            data = MicroserviceGateway.create_conductor(request.data)
+            return Response(data, status=status.HTTP_201_CREATED)
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+ 
+class ConductoresDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+ 
+    def put(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.update_conductor(pk, request.data))
+        except Exception as exc:
+            return _handle_error(exc)
+ 
+    def delete(self, request, pk):
+        try:
+            MicroserviceGateway.delete_conductor(pk)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as exc:
+            return _handle_error(exc)
+

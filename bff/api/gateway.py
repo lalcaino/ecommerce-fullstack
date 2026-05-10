@@ -44,6 +44,7 @@ class CircuitBreaker:
 
 _cb_inventario = CircuitBreaker()
 _cb_pedidos = CircuitBreaker()
+_cb_envios = CircuitBreaker()
 
 
 def _headers():
@@ -169,4 +170,77 @@ class MicroserviceGateway:
         return {
             'inventario': _cb_inventario.get_state(),
             'pedidos': _cb_pedidos.get_state(),
+            'envios': _cb_envios.get_state()
         }
+    @staticmethod
+    def get_envios():
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/"
+        return _cb_envios.call(lambda: safe_request('GET', url))
+ 
+    @staticmethod
+    def get_envio(pk):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/{pk}/"
+        return _cb_envios.call(lambda: safe_request('GET', url))
+ 
+    @staticmethod
+    def create_envio(data):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/"
+        return _cb_envios.call(lambda: safe_request('POST', url, json=data))
+ 
+    @staticmethod
+    def delete_envio(pk):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/{pk}/"
+        return _cb_envios.call(lambda: safe_request('DELETE', url))
+ 
+    @staticmethod
+    def update_estado_envio(pk, data):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/{pk}/estado/"
+        return _cb_envios.call(lambda: safe_request('PATCH', url, json=data))
+ 
+    @staticmethod
+    def update_posicion_envio(pk, data):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/{pk}/posicion/"
+        return _cb_envios.call(lambda: safe_request('PATCH', url, json=data))
+ 
+    @staticmethod
+    def update_ruta_envio(pk, data):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/{pk}/ruta/"
+        return _cb_envios.call(lambda: safe_request('PATCH', url, json=data))
+ 
+    @staticmethod
+    def get_envios_en_curso():
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/en-curso/"
+        return _cb_envios.call(lambda: safe_request('GET', url))
+ 
+    @staticmethod
+    def get_envio_por_pedido(pedido_id):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/pedido/{pedido_id}/"
+        return _cb_envios.call(lambda: safe_request('GET', url))
+ 
+    @staticmethod
+    def update_estado_parada(pk, data):
+        url = f"{settings.MS_ENVIOS_URL}/api/paradas/{pk}/estado/"
+        return _cb_envios.call(lambda: safe_request('PATCH', url, json=data))
+ 
+    # ── Conductores ───────────────────────────────────────────────────────────
+ 
+    @staticmethod
+    def get_conductores(solo_disponibles=False):
+        params = '?disponibles=true' if solo_disponibles else ''
+        url = f"{settings.MS_ENVIOS_URL}/api/conductores/{params}"
+        return _cb_envios.call(lambda: safe_request('GET', url))
+ 
+    @staticmethod
+    def create_conductor(data):
+        url = f"{settings.MS_ENVIOS_URL}/api/conductores/"
+        return _cb_envios.call(lambda: safe_request('POST', url, json=data))
+ 
+    @staticmethod
+    def update_conductor(pk, data):
+        url = f"{settings.MS_ENVIOS_URL}/api/conductores/{pk}/"
+        return _cb_envios.call(lambda: safe_request('PUT', url, json=data))
+ 
+    @staticmethod
+    def delete_conductor(pk):
+        url = f"{settings.MS_ENVIOS_URL}/api/conductores/{pk}/"
+        return _cb_envios.call(lambda: safe_request('DELETE', url))

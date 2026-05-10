@@ -52,6 +52,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 # URLs de los microservicios
 MS_INVENTARIO_URL = config('MS_INVENTARIO_URL', default='http://localhost:8001')
 MS_PEDIDOS_URL    = config('MS_PEDIDOS_URL',    default='http://localhost:8002')
+MS_ENVIOS_URL = config('MS_ENVIOS_URL', default='http://localhost:8003')
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LANGUAGE_CODE = 'es-cl'
