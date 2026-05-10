@@ -1,7 +1,3 @@
-"""
-auth_views.py — Registro y login de usuarios SmartLogix
-Usa el modelo User de Django + SimpleJWT para tokens.
-"""
 from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -12,6 +8,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 def get_tokens(user):
     refresh = RefreshToken.for_user(user)
+    # Agrega el nombre al payload del token
+    refresh['first_name'] = user.first_name
+    refresh['email'] = user.email
     return {
         'access':  str(refresh.access_token),
         'refresh': str(refresh),
