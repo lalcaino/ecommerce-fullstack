@@ -12,28 +12,29 @@ ESTADO_CHOICES = [
 
 
 class Tienda(models.Model):
-    nombre = models.CharField(max_length=200)
+    nombre    = models.CharField(max_length=200)
     direccion = models.CharField(max_length=300)
-    ciudad = models.CharField(max_length=100)
-    activa = models.BooleanField(default=True)
+    ciudad    = models.CharField(max_length=100)
+    bodega_id = models.PositiveIntegerField(null=True, blank=True)  # ID de la bodega en ms-inventario
+    activa    = models.BooleanField(default=True)
     creado_en = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['nombre']
 
     def __str__(self):
-        return self.nombre
+        return f'{self.nombre} — {self.ciudad}'
 
 
 class Pedido(models.Model):
-    cliente = models.CharField(max_length=200)
-    email_cliente = models.EmailField()
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-    total = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    notas = models.TextField(blank=True)
-    tienda = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
+    cliente        = models.CharField(max_length=200)
+    email_cliente  = models.EmailField()
+    estado         = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+    total          = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    notas          = models.TextField(blank=True)
+    tienda         = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_update = models.DateTimeField(auto_now=True)
+    fecha_update   = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-fecha_creacion']
@@ -43,10 +44,10 @@ class Pedido(models.Model):
 
 
 class ItemPedido(models.Model):
-    pedido = models.ForeignKey(Pedido, related_name='items', on_delete=models.CASCADE)
-    producto_id = models.PositiveIntegerField()
+    pedido          = models.ForeignKey(Pedido, related_name='items', on_delete=models.CASCADE)
+    producto_id     = models.PositiveIntegerField()
     nombre_producto = models.CharField(max_length=200)
-    cantidad = models.PositiveIntegerField(default=1)
+    cantidad        = models.PositiveIntegerField(default=1)
     precio_unitario = models.DecimalField(max_digits=12, decimal_places=2)
 
     @property
@@ -68,6 +69,10 @@ class TiendaRepository:
         return Tienda.objects.get(pk=pk)
 
     @staticmethod
+    def get_by_bodega(bodega_id):
+        return Tienda.objects.filter(bodega_id=bodega_id, activa=True)
+
+    @staticmethod
     def create(data):
         return Tienda.objects.create(**data)
 
@@ -85,11 +90,15 @@ class TiendaRepository:
 class PedidoRepository:
     @staticmethod
     def get_all():
-        return Pedido.objects.prefetch_related('items').all()
+        return Pedido.objects.prefetch_related('items').select_related('tienda').all()
 
     @staticmethod
     def get_by_id(pk):
-        return Pedido.objects.prefetch_related('items').get(pk=pk)
+        return Pedido.objects.prefetch_related('items').select_related('tienda').get(pk=pk)
+
+    @staticmethod
+    def get_by_tienda(tienda_id):
+        return Pedido.objects.filter(tienda_id=tienda_id).prefetch_related('items')
 
     @staticmethod
     def create(data):
@@ -118,41 +127,40 @@ class PedidoRepository:
         Pedido.objects.filter(pk=pk).delete()
 
 
-# Factory Method para crear pedidos según tipo
+# Factory Method para tipos de pedido
 class PedidoFactory:
     @staticmethod
     def crear_pedido_estandar(cliente, email, notas=''):
         return {
-            'cliente': cliente,
+            'cliente':       cliente,
             'email_cliente': email,
-            'estado': 'PENDIENTE',
-            'notas': notas or 'Pedido estándar',
+            'estado':        'PENDIENTE',
+            'notas':         notas or 'Pedido estándar',
         }
 
     @staticmethod
     def crear_pedido_express(cliente, email):
         return {
-            'cliente': cliente,
+            'cliente':       cliente,
             'email_cliente': email,
-            'estado': 'PROCESANDO',
-            'notas': 'Pedido express — procesamiento prioritario',
+            'estado':        'PROCESANDO',
+            'notas':         'Pedido express — procesamiento prioritario',
         }
 
     @staticmethod
     def crear_pedido_corporativo(cliente, email, notas=''):
         return {
-            'cliente': cliente,
+            'cliente':       cliente,
             'email_cliente': email,
-            'estado': 'PENDIENTE',
-            'notas': notas or 'Pedido corporativo — requiere validación adicional',
+            'estado':        'PENDIENTE',
+            'notas':         notas or 'Pedido corporativo — requiere validación adicional',
         }
 
     @classmethod
     def crear(cls, tipo, **kwargs):
         metodos = {
-            'estandar': cls.crear_pedido_estandar,
-            'express': cls.crear_pedido_express,
+            'estandar':    cls.crear_pedido_estandar,
+            'express':     cls.crear_pedido_express,
             'corporativo': cls.crear_pedido_corporativo,
         }
-        factory_fn = metodos.get(tipo, cls.crear_pedido_estandar)
-        return factory_fn(**kwargs)
+        return metodos.get(tipo, cls.crear_pedido_estandar)(**kwargs)

@@ -8,7 +8,12 @@ from .serializers import PedidoSerializer, EstadoUpdateSerializer, TiendaSeriali
 # Vistas de Tienda
 class TiendaListView(APIView):
     def get(self, request):
-        tiendas = TiendaRepository.get_all()
+        # Filtro opcional por bodega_id
+        bodega_id = request.query_params.get('bodega_id')
+        if bodega_id:
+            tiendas = TiendaRepository.get_by_bodega(bodega_id)
+        else:
+            tiendas = TiendaRepository.get_all()
         return Response(TiendaSerializer(tiendas, many=True).data)
 
     def post(self, request):
@@ -50,7 +55,12 @@ class TiendaDetailView(APIView):
 # Vistas de Pedido
 class PedidoListView(APIView):
     def get(self, request):
-        pedidos = PedidoRepository.get_all()
+        # Filtro opcional por tienda
+        tienda_id = request.query_params.get('tienda_id')
+        if tienda_id:
+            pedidos = PedidoRepository.get_by_tienda(tienda_id)
+        else:
+            pedidos = PedidoRepository.get_all()
         return Response(PedidoSerializer(pedidos, many=True).data)
 
     def post(self, request):

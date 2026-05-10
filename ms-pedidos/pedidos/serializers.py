@@ -6,8 +6,11 @@ class TiendaSerializer(serializers.ModelSerializer):
     total_pedidos = serializers.SerializerMethodField()
 
     class Meta:
-        model = Tienda
-        fields = ['id', 'nombre', 'direccion', 'ciudad', 'activa', 'creado_en', 'total_pedidos']
+        model  = Tienda
+        fields = [
+            'id', 'nombre', 'direccion', 'ciudad',
+            'bodega_id', 'activa', 'creado_en', 'total_pedidos',
+        ]
         read_only_fields = ['id', 'creado_en']
 
     def get_total_pedidos(self, obj):
@@ -18,20 +21,22 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
     subtotal = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
 
     class Meta:
-        model = ItemPedido
+        model  = ItemPedido
         fields = ['id', 'producto_id', 'nombre_producto', 'cantidad', 'precio_unitario', 'subtotal']
 
 
 class PedidoSerializer(serializers.ModelSerializer):
-    items = ItemPedidoSerializer(many=True, required=False)
+    items        = ItemPedidoSerializer(many=True, required=False)
     tienda_nombre = serializers.CharField(source='tienda.nombre', read_only=True)
+    tienda_ciudad = serializers.CharField(source='tienda.ciudad', read_only=True)
+    bodega_id     = serializers.IntegerField(source='tienda.bodega_id', read_only=True)
 
     class Meta:
-        model = Pedido
+        model  = Pedido
         fields = [
             'id', 'cliente', 'email_cliente', 'estado', 'total',
-            'notas', 'items', 'tienda', 'tienda_nombre',
-            'fecha_creacion', 'fecha_update',
+            'notas', 'items', 'tienda', 'tienda_nombre', 'tienda_ciudad',
+            'bodega_id', 'fecha_creacion', 'fecha_update',
         ]
         read_only_fields = ['id', 'total', 'fecha_creacion', 'fecha_update']
 

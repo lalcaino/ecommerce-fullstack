@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTiendas } from '../hooks/useTiendas'
+import { BodegasRepository } from '../services/api'
 
 const C = {
   brand: '#408A71', brandLight: '#e8f5f0',
@@ -53,7 +54,7 @@ function Btn({ onClick, children, variant = 'primary', small = false }) {
   )
 }
 
-function TiendaCard({ tienda, onDelete, onEdit }) {
+function TiendaCard({ tienda, bodegaNombre, onDelete, onEdit }) {
   return (
     <div className="tienda-card" style={{
       background: C.white, borderRadius: 16,
@@ -69,6 +70,9 @@ function TiendaCard({ tienda, onDelete, onEdit }) {
         <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>
           🏙 Ciudad: <strong style={{ color: C.gray700 }}>{tienda.ciudad}</strong>
         </p>
+        <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>
+          🏭 Bodega: <strong style={{ color: C.brand }}>{bodegaNombre || 'Sin bodega asignada'}</strong>
+        </p>
         <p style={{ margin: '6px 0 0', fontSize: 12, color: C.gray400 }}>
           Pedidos asociados: <strong>{tienda.total_pedidos ?? 0}</strong>
         </p>
@@ -81,8 +85,12 @@ function TiendaCard({ tienda, onDelete, onEdit }) {
   )
 }
 
-function NuevaTiendaForm({ inicial, onSubmit, onCancel }) {
-  const [form, setForm] = useState(inicial || { nombre: '', direccion: '', ciudad: '' })
+function NuevaTiendaForm({ inicial, bodegas, onSubmit, onCancel }) {
+  const [form, setForm] = useState(
+    inicial
+      ? { nombre: inicial.nombre, direccion: inicial.direccion, ciudad: inicial.ciudad, bodega_id: inicial.bodega_id || '' }
+      : { nombre: '', direccion: '', ciudad: '', bodega_id: '' }
+  )
   const change = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
 
   return (
@@ -113,9 +121,38 @@ function NuevaTiendaForm({ inicial, onSubmit, onCancel }) {
             />
           </div>
         ))}
+
+        {/* Desplegable de bodegas */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+            Bodega asignada
+          </label>
+          <select
+            name="bodega_id" value={form.bodega_id} onChange={change}
+            style={{
+              border: `1.5px solid ${C.gray200}`, borderRadius: 8,
+              padding: '8px 12px', fontSize: 14, fontFamily: 'inherit',
+              color: C.gray800, outline: 'none', cursor: 'pointer',
+              background: C.white,
+            }}
+          >
+            <option value="">Sin bodega asignada</option>
+            {bodegas.map(b => (
+              <option key={b.id} value={b.id}>
+                🏭 {b.nombre} — Cap. {b.capacidad}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
       <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-        <Btn variant="success" onClick={() => onSubmit(form)}>✓ {inicial ? 'Guardar' : 'Crear'}</Btn>
+        <Btn variant="success" onClick={() => onSubmit({
+          ...form,
+          bodega_id: form.bodega_id ? parseInt(form.bodega_id) : null,
+        })}>
+          ✓ {inicial ? 'Guardar' : 'Crear'}
+        </Btn>
         <Btn variant="secondary" onClick={onCancel}>Cancelar</Btn>
       </div>
     </div>
@@ -124,14 +161,27 @@ function NuevaTiendaForm({ inicial, onSubmit, onCancel }) {
 
 export default function Tiendas() {
   const { tiendas, loading, error, createTienda, updateTienda, deleteTienda } = useTiendas()
+  const [bodegas,  setBodegas]  = useState([])
   const [showForm, setShowForm] = useState(false)
   const [editando, setEditando] = useState(null)
   const [search,   setSearch]   = useState('')
+
+  // Carga bodegas para el desplegable
+  useEffect(() => {
+    BodegasRepository.getAll()
+      .then(data => setBodegas(data))
+      .catch(() => setBodegas([]))
+  }, [])
 
   const filtered = tiendas.filter(t =>
     t.nombre?.toLowerCase().includes(search.toLowerCase()) ||
     t.ciudad?.toLowerCase().includes(search.toLowerCase())
   )
+
+  const getBodegaNombre = (bodega_id) => {
+    const b = bodegas.find(b => b.id === bodega_id)
+    return b ? b.nombre : null
+  }
 
   const handleSubmit = async (data) => {
     if (editando) {
@@ -156,15 +206,10 @@ export default function Tiendas() {
     <div style={{ padding: '28px 24px', background: C.bg, minHeight: '100vh' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}>
-              🏪 Gestión de Tiendas
-            </h1>
-            <p style={{ margin: '4px 0 0', color: C.gray500, fontSize: 14 }}>
-              {tiendas.length} tiendas registradas
-            </p>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}>🏪 Gestión de Tiendas</h1>
+            <p style={{ margin: '4px 0 0', color: C.gray500, fontSize: 14 }}>{tiendas.length} tiendas registradas</p>
           </div>
           <Btn onClick={() => { setShowForm(v => !v); setEditando(null) }}>
             {showForm ? '✕ Cerrar' : '＋ Nueva Tienda'}
@@ -176,20 +221,18 @@ export default function Tiendas() {
             background: C.error + '12', border: `1px solid ${C.error}30`,
             borderRadius: 12, padding: '12px 16px', marginBottom: 20,
             color: C.error, fontSize: 14, fontWeight: 600,
-          }}>
-            ⚠️ {error}
-          </div>
+          }}>⚠️ {error}</div>
         )}
 
         {(showForm || editando) && (
           <NuevaTiendaForm
             inicial={editando}
+            bodegas={bodegas}
             onSubmit={handleSubmit}
             onCancel={() => { setShowForm(false); setEditando(null) }}
           />
         )}
 
-        {/* Buscador */}
         <div style={{ marginBottom: 20 }}>
           <input
             placeholder="🔍 Buscar tienda o ciudad..."
@@ -202,12 +245,12 @@ export default function Tiendas() {
           />
         </div>
 
-        {/* Cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {filtered.map((t, i) => (
             <div key={t.id} style={{ animationDelay: `${i * 0.05}s` }}>
               <TiendaCard
                 tienda={t}
+                bodegaNombre={getBodegaNombre(t.bodega_id)}
                 onDelete={deleteTienda}
                 onEdit={(tienda) => { setEditando(tienda); setShowForm(false) }}
               />
