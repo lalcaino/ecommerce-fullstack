@@ -19,6 +19,19 @@ const ESTADO_ICON = {
   PENDIENTE: '⏳', PROCESANDO: '⚙️', ENVIADO: '🚚', ENTREGADO: '✅', CANCELADO: '❌',
 }
 
+const inputStyle = {
+  border: `1.5px solid ${C.gray200}`,
+  borderRadius: 8,
+  padding: '8px 12px',
+  fontSize: 14,
+  fontFamily: 'inherit',
+  color: C.gray800,
+  background: C.white,
+  outline: 'none',
+  width: '100%',
+  boxSizing: 'border-box',
+}
+
 function Badge({ color, children }) {
   return (
     <span style={{
@@ -41,77 +54,67 @@ function Btn({ onClick, children, variant = 'primary', small = false }) {
       fontFamily: 'inherit', fontWeight: 600,
       padding: small ? '5px 12px' : '9px 18px',
       fontSize: small ? 12 : 14,
-      transition: 'opacity 0.2s',
     }}>{children}</button>
+  )
+}
+
+function Campo({ label, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+        {label}
+      </label>
+      {children}
+    </div>
   )
 }
 
 function NuevoPedidoForm({ tiendas, onSubmit, onCancel }) {
   const [form, setForm] = useState({
-    cliente: '', email_cliente: '', tienda: '', notas: '',
+    cliente: '', email_cliente: '', telefono_cliente: '',
+    direccion_entrega: '', tienda: '', notas: '',
   })
   const change = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
 
   return (
     <div style={{
       background: C.white, borderRadius: 14, border: `1px solid ${C.gray200}`,
-      padding: 24, marginBottom: 20, animation: 'fadeIn 0.3s ease',
+      padding: 24, marginBottom: 20,
     }}>
       <h3 style={{ margin: '0 0 18px', fontSize: 16, fontWeight: 700, color: C.gray800 }}>Nuevo Pedido</h3>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
 
-        {/* Cliente */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Cliente
-          </label>
-          <input name="cliente" value={form.cliente} onChange={change}
-            style={{ border: `1.5px solid ${C.gray200}`, borderRadius: 8, padding: '8px 12px', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
-          />
-        </div>
+        <Campo label="Cliente">
+          <input name="cliente" value={form.cliente} onChange={change} style={inputStyle} />
+        </Campo>
 
-        {/* Email */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Email cliente
-          </label>
-          <input name="email_cliente" type="email" value={form.email_cliente} onChange={change}
-            style={{ border: `1.5px solid ${C.gray200}`, borderRadius: 8, padding: '8px 12px', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
-          />
-        </div>
+        <Campo label="Email cliente">
+          <input name="email_cliente" type="email" value={form.email_cliente} onChange={change} style={inputStyle} />
+        </Campo>
 
-        {/* Desplegable de tiendas */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Tienda
-          </label>
+        <Campo label="Teléfono">
+          <input name="telefono_cliente" value={form.telefono_cliente} onChange={change} placeholder="+56 9 1234 5678" style={inputStyle} />
+        </Campo>
+
+        <Campo label="Dirección de entrega">
+          <input name="direccion_entrega" value={form.direccion_entrega} onChange={change} placeholder="Av. Principal 123, Santiago" style={inputStyle} />
+        </Campo>
+
+        <Campo label="Tienda">
           <select name="tienda" value={form.tienda} onChange={change}
-            style={{
-              border: `1.5px solid ${C.gray200}`, borderRadius: 8,
-              padding: '8px 12px', fontSize: 14, fontFamily: 'inherit',
-              color: C.gray800, outline: 'none', cursor: 'pointer',
-              background: C.white,
-            }}
+            style={{ ...inputStyle, cursor: 'pointer' }}
           >
             <option value="">Sin tienda asignada</option>
             {tiendas.map(t => (
-              <option key={t.id} value={t.id}>
-                🏪 {t.nombre} — {t.ciudad}
-              </option>
+              <option key={t.id} value={t.id}>🏪 {t.nombre} — {t.ciudad}</option>
             ))}
           </select>
-        </div>
+        </Campo>
 
-        {/* Notas */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Notas
-          </label>
-          <input name="notas" value={form.notas} onChange={change}
-            placeholder="Opcional"
-            style={{ border: `1.5px solid ${C.gray200}`, borderRadius: 8, padding: '8px 12px', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
-          />
-        </div>
+        <Campo label="Notas">
+          <input name="notas" value={form.notas} onChange={change} placeholder="Opcional" style={inputStyle} />
+        </Campo>
+
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
@@ -127,12 +130,11 @@ function NuevoPedidoForm({ tiendas, onSubmit, onCancel }) {
 
 export default function Pedidos() {
   const { pedidos, loading, error, createPedido, cambiarEstado } = usePedidos()
-  const [tiendas,      setTiendas]      = useState([])
-  const [showForm,     setShowForm]     = useState(false)
-  const [filtroEstado, setFiltro]       = useState('TODOS')
-  const [search,       setSearch]       = useState('')
+  const [tiendas,      setTiendas]  = useState([])
+  const [showForm,     setShowForm] = useState(false)
+  const [filtroEstado, setFiltro]   = useState('TODOS')
+  const [search,       setSearch]   = useState('')
 
-  // Carga tiendas para el desplegable
   useEffect(() => {
     TiendasRepository.getAll()
       .then(data => setTiendas(data))
@@ -187,11 +189,7 @@ export default function Pedidos() {
           <input
             placeholder="🔍 Buscar cliente..."
             value={search} onChange={e => setSearch(e.target.value)}
-            style={{
-              border: `1.5px solid ${C.gray200}`, borderRadius: 8,
-              padding: '9px 14px', fontSize: 14, fontFamily: 'inherit',
-              outline: 'none', width: 220,
-            }}
+            style={{ ...inputStyle, width: 220 }}
           />
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {['TODOS', ...ESTADOS].map(e => (
@@ -214,7 +212,7 @@ export default function Pedidos() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: C.gray100, borderBottom: `1px solid ${C.gray200}` }}>
-                {['ID', 'Cliente', 'Total', 'Estado', 'Tienda', 'Fecha', 'Cambiar Estado'].map(h => (
+                {['ID', 'Cliente', 'Teléfono', 'Dirección entrega', 'Total', 'Estado', 'Tienda', 'Fecha', 'Cambiar Estado'].map(h => (
                   <th key={h} style={{
                     padding: '12px 16px', textAlign: 'left', fontWeight: 700,
                     color: C.gray500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px',
@@ -229,6 +227,8 @@ export default function Pedidos() {
                   <tr key={p.id} style={{ borderBottom: i < visible.length - 1 ? `1px solid ${C.gray100}` : 'none' }}>
                     <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, color: C.brand, fontWeight: 700 }}>{p.id}</td>
                     <td style={{ padding: '12px 16px', fontWeight: 600, color: C.gray800 }}>{p.cliente}</td>
+                    <td style={{ padding: '12px 16px', color: C.gray500, fontSize: 13 }}>{p.telefono_cliente || '—'}</td>
+                    <td style={{ padding: '12px 16px', color: C.gray500, fontSize: 13 }}>{p.direccion_entrega || '—'}</td>
                     <td style={{ padding: '12px 16px', fontWeight: 700, color: C.gray800 }}>${parseFloat(p.total || 0).toLocaleString('es-CL')}</td>
                     <td style={{ padding: '12px 16px' }}>
                       <Badge color={color}>{ESTADO_ICON[p.estado]} {p.estado}</Badge>

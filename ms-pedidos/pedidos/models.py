@@ -15,7 +15,7 @@ class Tienda(models.Model):
     nombre    = models.CharField(max_length=200)
     direccion = models.CharField(max_length=300)
     ciudad    = models.CharField(max_length=100)
-    bodega_id = models.PositiveIntegerField(null=True, blank=True)  # ID de la bodega en ms-inventario
+    bodega_id = models.PositiveIntegerField(null=True, blank=True)
     activa    = models.BooleanField(default=True)
     creado_en = models.DateTimeField(auto_now_add=True)
 
@@ -27,14 +27,16 @@ class Tienda(models.Model):
 
 
 class Pedido(models.Model):
-    cliente        = models.CharField(max_length=200)
-    email_cliente  = models.EmailField()
-    estado         = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-    total          = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    notas          = models.TextField(blank=True)
-    tienda         = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_update   = models.DateTimeField(auto_now=True)
+    cliente             = models.CharField(max_length=200)
+    email_cliente       = models.EmailField()
+    telefono_cliente    = models.CharField(max_length=20, blank=True)
+    direccion_entrega   = models.CharField(max_length=300, blank=True)
+    estado              = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+    total               = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    notas               = models.TextField(blank=True)
+    tienda              = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
+    fecha_creacion      = models.DateTimeField(auto_now_add=True)
+    fecha_update        = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-fecha_creacion']
@@ -58,7 +60,6 @@ class ItemPedido(models.Model):
         return f'{self.nombre_producto} x{self.cantidad}'
 
 
-# Repository de Tienda
 class TiendaRepository:
     @staticmethod
     def get_all():
@@ -86,7 +87,6 @@ class TiendaRepository:
         Tienda.objects.filter(pk=pk).delete()
 
 
-# Repository de Pedido
 class PedidoRepository:
     @staticmethod
     def get_all():
@@ -127,7 +127,6 @@ class PedidoRepository:
         Pedido.objects.filter(pk=pk).delete()
 
 
-# Factory Method para tipos de pedido
 class PedidoFactory:
     @staticmethod
     def crear_pedido_estandar(cliente, email, notas=''):

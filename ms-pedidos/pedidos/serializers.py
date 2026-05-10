@@ -26,16 +26,17 @@ class ItemPedidoSerializer(serializers.ModelSerializer):
 
 
 class PedidoSerializer(serializers.ModelSerializer):
-    items        = ItemPedidoSerializer(many=True, required=False)
-    tienda_nombre = serializers.CharField(source='tienda.nombre', read_only=True)
-    tienda_ciudad = serializers.CharField(source='tienda.ciudad', read_only=True)
-    bodega_id     = serializers.IntegerField(source='tienda.bodega_id', read_only=True)
+    items             = ItemPedidoSerializer(many=True, required=False)
+    tienda_nombre     = serializers.CharField(source='tienda.nombre', read_only=True)
+    tienda_ciudad     = serializers.CharField(source='tienda.ciudad', read_only=True)
+    bodega_id         = serializers.IntegerField(source='tienda.bodega_id', read_only=True)
 
     class Meta:
         model  = Pedido
         fields = [
-            'id', 'cliente', 'email_cliente', 'estado', 'total',
-            'notas', 'items', 'tienda', 'tienda_nombre', 'tienda_ciudad',
+            'id', 'cliente', 'email_cliente', 'telefono_cliente',
+            'direccion_entrega', 'estado', 'total', 'notas',
+            'items', 'tienda', 'tienda_nombre', 'tienda_ciudad',
             'bodega_id', 'fecha_creacion', 'fecha_update',
         ]
         read_only_fields = ['id', 'total', 'fecha_creacion', 'fecha_update']
