@@ -1,5 +1,39 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { EnviosRepository, ConductoresRepository } from '../services/api_envios'
+import { PedidosRepository } from '../services/api'
+
+// Mapeo local (espejo del backend) para optimistic updates
+const ENVIO_A_PEDIDO = {
+  PENDIENTE:  'PENDIENTE',
+  EN_RUTA:    'ENVIADO',
+  COMPLETADO: 'ENTREGADO',
+  FALLIDO:    'CANCELADO',
+  CANCELADO:  'CANCELADO',
+}
+
+/**
+ * Enriquece cada envío con el campo `estado_pedido` obtenido de ms-pedidos.
+ * Si un pedido no se puede obtener, usa el mapeo local como fallback.
+ */
+async function enrichConEstadoPedido(envios) {
+  if (!envios.length) return envios
+
+  // Obtener todos los pedidos en una sola llamada
+  let pedidosMap = {}
+  try {
+    const pedidos = await PedidosRepository.getAll()
+    pedidosMap = Object.fromEntries((pedidos || []).map(p => [p.id, p.estado]))
+  } catch {
+    // fallback: usamos el mapeo local
+  }
+
+  return envios.map(e => ({
+    ...e,
+    estado_pedido: pedidosMap[e.pedido_id]
+      ?? ENVIO_A_PEDIDO[e.estado]
+      ?? e.estado,
+  }))
+}
 
 export function useEnvios() {
   const [envios,      setEnvios]      = useState([])
@@ -16,7 +50,9 @@ export function useEnvios() {
         EnviosRepository.getAll(),
         ConductoresRepository.getAll(),
       ])
-      setEnvios(Array.isArray(enviosData) ? enviosData : [])
+      const raw = Array.isArray(enviosData) ? enviosData : []
+      const enriched = await enrichConEstadoPedido(raw)
+      setEnvios(enriched)
       setConductores(Array.isArray(conductoresData) ? conductoresData : [])
     } catch (err) {
       setError(err.detail || err.message || 'Error al cargar envíos')
@@ -25,16 +61,17 @@ export function useEnvios() {
     }
   }, [])
 
-  // Polling de envíos en curso cada 15 segundos para tiempo real
+  // Polling de envíos en curso cada 15 segundos
   const startPolling = useCallback(() => {
     if (pollingRef.current) return
     pollingRef.current = setInterval(async () => {
       try {
         const enCurso = await EnviosRepository.getEnCurso()
         if (!Array.isArray(enCurso)) return
+        const enriched = await enrichConEstadoPedido(enCurso)
         setEnvios(prev =>
           prev.map(e => {
-            const actualizado = enCurso.find(ec => ec.id === e.id)
+            const actualizado = enriched.find(ec => ec.id === e.id)
             return actualizado || e
           })
         )
@@ -53,8 +90,9 @@ export function useEnvios() {
     setLoading(true)
     try {
       const nuevo = await EnviosRepository.create(payload)
-      setEnvios(prev => [nuevo, ...prev])
-      return { ok: true, data: nuevo }
+      const [enriched] = await enrichConEstadoPedido([nuevo])
+      setEnvios(prev => [enriched, ...prev])
+      return { ok: true, data: enriched }
     } catch (err) {
       setError(err.detail || 'Error al crear envío')
       return { ok: false }
@@ -63,12 +101,31 @@ export function useEnvios() {
     }
   }, [])
 
+  /**
+   * Actualiza el estado del envío.
+   * El BFF se encarga de propagar el cambio al pedido.
+   * Aquí hacemos un optimistic update del estado_pedido en el frontend.
+   */
   const updateEstado = useCallback(async (id, estado) => {
+    // Optimistic update inmediato
+    setEnvios(prev => prev.map(e =>
+      e.id === id
+        ? { ...e, estado, estado_pedido: ENVIO_A_PEDIDO[estado] ?? estado }
+        : e
+    ))
     try {
       const updated = await EnviosRepository.updateEstado(id, estado)
-      setEnvios(prev => prev.map(e => e.id === id ? updated : e))
+      // El BFF devuelve estado_pedido en la respuesta
+      const estadoPedido = updated.estado_pedido ?? ENVIO_A_PEDIDO[estado] ?? estado
+      setEnvios(prev => prev.map(e =>
+        e.id === id ? { ...updated, estado_pedido: estadoPedido } : e
+      ))
       return { ok: true }
     } catch (err) {
+      // Revertir optimistic update en caso de error
+      setEnvios(prev => prev.map(e =>
+        e.id === id ? { ...e, estado: e.estado, estado_pedido: e.estado_pedido } : e
+      ))
       setError(err.detail || 'Error al cambiar estado')
       return { ok: false }
     }

@@ -25,6 +25,15 @@ const ESTADO_ENVIO = {
   CANCELADO:  { color: C.gray400,  icon: '🚫', label: 'Cancelado'  },
 }
 
+// Colores y etiquetas para el estado del PEDIDO
+const ESTADO_PEDIDO = {
+  PENDIENTE:   { color: C.warning,  icon: '⏳', label: 'Pedido Pendiente'   },
+  PROCESANDO:  { color: C.info,     icon: '⚙️', label: 'Pedido Procesando'  },
+  ENVIADO:     { color: C.purple,   icon: '📦', label: 'Pedido Enviado'     },
+  ENTREGADO:   { color: C.success,  icon: '✅', label: 'Pedido Entregado'   },
+  CANCELADO:   { color: C.error,    icon: '❌', label: 'Pedido Cancelado'   },
+}
+
 const TIPO_ENVIO = {
   ESTANDAR:   { color: C.brand,   label: 'Estándar'   },
   EXPRESS:    { color: '#f97316', label: 'Express'    },
@@ -108,7 +117,6 @@ function GeocoderInput({ value, onChange, onSelect, placeholder }) {
   const debounceRef = useRef(null)
   const wrapperRef  = useRef(null)
 
-  // Cierra dropdown al hacer clic fuera
   useEffect(() => {
     const handler = (e) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -122,7 +130,7 @@ function GeocoderInput({ value, onChange, onSelect, placeholder }) {
   const handleChange = (e) => {
     const val = e.target.value
     setQuery(val)
-    onChange(val)           // notifica al padre que se borró la selección
+    onChange(val)
     setSugerencias([])
     setMostrar(false)
 
@@ -175,8 +183,6 @@ function GeocoderInput({ value, onChange, onSelect, placeholder }) {
             color: C.gray800, transition: 'border-color .2s',
           }}
         />
-
-        {/* Spinner o check */}
         <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)' }}>
           {buscando ? (
             <div style={{
@@ -192,7 +198,6 @@ function GeocoderInput({ value, onChange, onSelect, placeholder }) {
         </div>
       </div>
 
-      {/* Dropdown sugerencias */}
       {mostrar && sugerencias.length > 0 && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
@@ -204,7 +209,7 @@ function GeocoderInput({ value, onChange, onSelect, placeholder }) {
             <div
               key={f.id}
               className="geocoder-suggestion"
-              onMouseDown={() => handleSelect(f)}   // mouseDown para no perder el foco primero
+              onMouseDown={() => handleSelect(f)}
               style={{
                 padding: '10px 14px', cursor: 'pointer', fontSize: 13,
                 borderBottom: `1px solid ${C.gray100}`,
@@ -219,19 +224,6 @@ function GeocoderInput({ value, onChange, onSelect, placeholder }) {
               </div>
             </div>
           ))}
-
-          {!MAPBOX_TOKEN && (
-            <div style={{ padding: '10px 14px', fontSize: 12, color: C.warning, fontWeight: 600 }}>
-              ⚠️ Configura VITE_MAPBOX_TOKEN para buscar direcciones
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Sin token: aviso */}
-      {!MAPBOX_TOKEN && query.length > 2 && (
-        <div style={{ fontSize: 11, color: C.warning, marginTop: 4, fontWeight: 600 }}>
-          ⚠️ Sin VITE_MAPBOX_TOKEN — ingresa lat/lon manualmente
         </div>
       )}
     </div>
@@ -253,9 +245,7 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
     notas:          '',
   })
 
-  // Texto del buscador (separado del form para saber si ya se seleccionó)
   const [destinoTexto, setDestinoTexto] = useState('')
-
   const ch = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
 
   const handleDestinoSelect = ({ nombre, lat, lon }) => {
@@ -270,7 +260,6 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
 
   const handleDestinoChange = (val) => {
     setDestinoTexto(val)
-    // Si el usuario edita el texto, limpiamos las coordenadas
     if (val !== form.destino_nombre) {
       setForm(p => ({ ...p, destino_nombre: '', destino_lat: '', destino_lon: '' }))
     }
@@ -309,21 +298,14 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
       </h3>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-
-        {/* ID Pedido */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            ID Pedido *
-          </label>
+          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>ID Pedido *</label>
           <input type="number" name="pedido_id" value={form.pedido_id} onChange={ch}
             placeholder="Ej: 1" style={inputStyle} />
         </div>
 
-        {/* Tipo */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Tipo
-          </label>
+          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>Tipo</label>
           <select name="tipo" value={form.tipo} onChange={ch} style={inputStyle}>
             <option value="ESTANDAR">📦 Estándar</option>
             <option value="EXPRESS">⚡ Express</option>
@@ -331,11 +313,8 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
           </select>
         </div>
 
-        {/* Conductor */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Conductor
-          </label>
+          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>Conductor</label>
           <select name="conductor" value={form.conductor} onChange={ch} style={inputStyle}>
             <option value="">Sin asignar</option>
             {conductores.map(c => (
@@ -344,16 +323,12 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
           </select>
         </div>
 
-        {/* Notas */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Notas
-          </label>
+          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>Notas</label>
           <input type="text" name="notas" value={form.notas} onChange={ch}
             placeholder="Opcional" style={inputStyle} />
         </div>
 
-        {/* Buscador de dirección — fila completa */}
         <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
             📍 Dirección de destino *
@@ -364,8 +339,6 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
             onSelect={handleDestinoSelect}
             placeholder="Ej: José Miguel Luis Cerda 5930, Santiago"
           />
-
-          {/* Coordenadas encontradas */}
           {form.destino_lat && form.destino_lon && (
             <div style={{
               display: 'flex', gap: 8, alignItems: 'center',
@@ -378,8 +351,6 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
               </span>
             </div>
           )}
-
-          {/* Fallback manual si no hay token */}
           {!MAPBOX_TOKEN && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -397,11 +368,8 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
         </div>
       </div>
 
-      {/* Botones */}
       <div style={{ display: 'flex', gap: 8, marginTop: 16, alignItems: 'center' }}>
-        <Btn variant="success" onClick={handleSubmit} disabled={!listo}>
-          ✓ Crear Envío
-        </Btn>
+        <Btn variant="success" onClick={handleSubmit} disabled={!listo}>✓ Crear Envío</Btn>
         <Btn variant="secondary" onClick={onCancel}>Cancelar</Btn>
         {!listo && (
           <span style={{ fontSize: 11, color: C.gray400, marginLeft: 4 }}>
@@ -487,32 +455,44 @@ function MapaEnvios({ envios, envioSeleccionado, onEnvioClick, onRutaPersistida 
       if (isNaN(destLon) || isNaN(destLat)) continue
       bounds.extend([destLon, destLat])
 
+      const estadoEnvio  = ESTADO_ENVIO[envio.estado]   || { color: C.gray500, icon: '📦', label: envio.estado }
+      const estadoPedido = ESTADO_PEDIDO[envio.estado_pedido] || null
+
       const el = document.createElement('div')
       el.className = 'envio-marker'
       el.style.background = color
       el.style.width  = isSelected ? '38px' : '32px'
       el.style.height = isSelected ? '38px' : '32px'
       el.style.border = isSelected ? `3px solid ${C.gray800}` : '3px solid #fff'
-      el.innerHTML = `${ESTADO_ENVIO[envio.estado]?.icon || '📦'}
+      el.innerHTML = `${estadoEnvio.icon}
         ${envio.estado === 'EN_RUTA' ? `<div class="ripple-ring" style="color:${color}"></div>` : ''}`
 
+      // Popup del mapa con estado del pedido incluido
       const popup = new mapboxgl.Popup({ offset: 24, className: 'map-popup' }).setHTML(`
         <div style="min-width:200px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:18px">${ESTADO_ENVIO[envio.estado]?.icon || '📦'}</span>
+            <span style="font-size:18px">${estadoEnvio.icon}</span>
             <div>
               <div style="font-size:13px;font-weight:700;color:${C.gray800}">Envío #${envio.id}</div>
               <div style="font-size:11px;color:${C.gray500}">Pedido #${envio.pedido_id}</div>
             </div>
           </div>
-          <div style="font-size:12px;color:${C.gray700};margin-bottom:4px">📍 <strong>${envio.destino_nombre}</strong></div>
-          ${envio.distancia_km ? `<div style="font-size:11px;color:${C.gray500}">🛣 ${envio.distancia_km} km · ⏱ ${envio.duracion_min} min</div>` : ''}
-          ${envio.conductor_nombre ? `<div style="font-size:11px;color:${C.gray500};margin-top:4px">👤 ${envio.conductor_nombre}</div>` : ''}
-          <div style="margin-top:8px;padding:4px 10px;border-radius:20px;display:inline-block;
-            background:${(ESTADO_ENVIO[envio.estado]?.color||C.gray500)+'18'};
-            color:${ESTADO_ENVIO[envio.estado]?.color||C.gray500};
-            font-size:11px;font-weight:700;border:1px solid ${(ESTADO_ENVIO[envio.estado]?.color||C.gray500)+'30'}">
-            ${ESTADO_ENVIO[envio.estado]?.label || envio.estado}
+          <div style="font-size:12px;color:${C.gray700};margin-bottom:6px">📍 <strong>${envio.destino_nombre}</strong></div>
+          ${envio.distancia_km ? `<div style="font-size:11px;color:${C.gray500};margin-bottom:4px">🛣 ${envio.distancia_km} km · ⏱ ${envio.duracion_min} min</div>` : ''}
+          ${envio.conductor_nombre ? `<div style="font-size:11px;color:${C.gray500};margin-bottom:6px">👤 ${envio.conductor_nombre}</div>` : ''}
+
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <div style="padding:3px 10px;border-radius:20px;display:inline-block;
+              background:${estadoEnvio.color+'18'};color:${estadoEnvio.color};
+              font-size:11px;font-weight:700;border:1px solid ${estadoEnvio.color+'30'}">
+              ${estadoEnvio.icon} Envío: ${estadoEnvio.label}
+            </div>
+            ${estadoPedido ? `
+            <div style="padding:3px 10px;border-radius:20px;display:inline-block;
+              background:${estadoPedido.color+'18'};color:${estadoPedido.color};
+              font-size:11px;font-weight:700;border:1px solid ${estadoPedido.color+'30'}">
+              ${estadoPedido.icon} ${estadoPedido.label}
+            </div>` : ''}
           </div>
         </div>
       `)
@@ -644,9 +624,10 @@ function MapaEnvios({ envios, envioSeleccionado, onEnvioClick, onRutaPersistida 
 
 // ─── Tarjeta de envío ─────────────────────────────────────────────────────────
 function EnvioCard({ envio, seleccionado, onSelect, onEstado, onDelete }) {
-  const est  = ESTADO_ENVIO[envio.estado] || { color: C.gray500, icon: '📦', label: envio.estado }
-  const tipo = TIPO_ENVIO[envio.tipo]     || { color: C.brand, label: envio.tipo }
-  const color = ROUTE_COLORS[envio.id % ROUTE_COLORS.length]
+  const est       = ESTADO_ENVIO[envio.estado]            || { color: C.gray500, icon: '📦', label: envio.estado }
+  const tipo      = TIPO_ENVIO[envio.tipo]                || { color: C.brand, label: envio.tipo }
+  const estPedido = ESTADO_PEDIDO[envio.estado_pedido]    || null
+  const color     = ROUTE_COLORS[envio.id % ROUTE_COLORS.length]
 
   return (
     <div
@@ -659,6 +640,7 @@ function EnvioCard({ envio, seleccionado, onSelect, onEstado, onDelete }) {
         padding: '14px 14px 12px', cursor: 'pointer', marginBottom: 8,
       }}
     >
+      {/* Cabecera */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div>
           <span style={{ fontSize: 13, fontWeight: 800, color: C.gray800 }}>Envío #{envio.id}</span>
@@ -669,29 +651,49 @@ function EnvioCard({ envio, seleccionado, onSelect, onEstado, onDelete }) {
           <span style={{ fontSize: 16 }}>{est.icon}</span>
         </div>
       </div>
+
+      {/* Destino */}
       <div style={{ fontSize: 12, marginBottom: 6 }}>
         <span style={{ color: C.gray400 }}>📍</span>{' '}
         <strong style={{ color: C.gray700 }}>{envio.destino_nombre}</strong>
       </div>
+
+      {/* Distancia / duración */}
       {(envio.distancia_km || envio.duracion_min) && (
         <div style={{ display: 'flex', gap: 10, marginBottom: 6 }}>
           {envio.distancia_km && <span style={{ fontSize: 11, color: C.gray500 }}>🛣 {parseFloat(envio.distancia_km).toFixed(1)} km</span>}
           {envio.duracion_min && <span style={{ fontSize: 11, color: C.gray500 }}>⏱ {envio.duracion_min} min</span>}
         </div>
       )}
+
+      {/* Conductor */}
       {envio.conductor_nombre && (
         <div style={{ fontSize: 11, color: C.gray500, marginBottom: 6 }}>
           👤 {envio.conductor_nombre}{envio.conductor_tel && <span style={{ marginLeft: 6 }}>· {envio.conductor_tel}</span>}
         </div>
       )}
+
+      {/* Paradas */}
       {Array.isArray(envio.paradas) && envio.paradas.length > 0 && (
         <div style={{ fontSize: 11, color: C.gray400, marginBottom: 6 }}>
           🗺 {envio.paradas.length} parada{envio.paradas.length > 1 ? 's' : ''}
         </div>
       )}
+
+      {/* ── Estado del envío + estado del pedido ── */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+        <Badge color={est.color} small>{est.icon} {est.label}</Badge>
+        {estPedido && (
+          <Badge color={estPedido.color} small>{estPedido.icon} {estPedido.label}</Badge>
+        )}
+      </div>
+
+      {/* Panel de acciones (solo cuando seleccionado) */}
       {seleccionado && (
-        <div style={{ borderTop: `1px solid ${C.gray100}`, paddingTop: 10, marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}
-          onClick={e => e.stopPropagation()}>
+        <div
+          style={{ borderTop: `1px solid ${C.gray100}`, paddingTop: 10, marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}
+          onClick={e => e.stopPropagation()}
+        >
           <select value={envio.estado} onChange={e => onEstado(envio.id, e.target.value)} style={{
             border: `1.5px solid ${est.color}40`, borderRadius: 7, padding: '4px 8px',
             fontSize: 11, fontWeight: 600, color: est.color, background: est.color + '10',
