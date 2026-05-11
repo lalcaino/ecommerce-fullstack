@@ -94,14 +94,14 @@ export default function Registro() {
                       fontWeight: 700, fontSize: 14, cursor: buscando ? 'not-allowed' : 'pointer',
                       whiteSpace: 'nowrap', opacity: buscando ? .7 : 1,
                     }}>
-                      {buscando ? '...' : '🔍 Buscar'}
+                      {buscando ? '...' : ' Buscar'}
                     </button>
                   </div>
                 </Field>
 
                 {buscando && (
                   <div style={{ background: C.brandLight, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 18 }}>⏳</span>
+                    <span style={{ fontSize: 18 }}></span>
                     <span style={{ color: C.brand, fontSize: 14, fontWeight: 600 }}>Consultando el SII...</span>
                   </div>
                 )}
@@ -109,7 +109,7 @@ export default function Registro() {
                 {empresa && !buscando && (
                   <div style={{ background: C.brandLight, border: `1.5px solid ${C.brand}30`, borderRadius: 12, padding: '14px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <span style={{ fontSize: 16 }}>🏢</span>
+                      <span style={{ fontSize: 16 }}></span>
                       <span style={{ fontSize: 13, fontWeight: 700, color: C.brand }}>Empresa encontrada</span>
                     </div>
                     <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: C.gray800 }}>{empresa.razonSocial || '—'}</p>
@@ -169,7 +169,7 @@ export default function Registro() {
 
               {errors.general && (
                 <div style={{ background: C.error + '12', border: `1px solid ${C.error}30`, borderRadius: 10, padding: '12px 16px', marginBottom: 20, color: C.error, fontSize: 14, fontWeight: 600 }}>
-                  ⚠️ {errors.general}
+                   {errors.general}
                 </div>
               )}
 

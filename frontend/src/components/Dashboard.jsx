@@ -57,14 +57,7 @@ function MetricCard({ title, value, subtitle, color, icon, delay = 0 }) {
       display: 'flex', alignItems: 'center', gap: 16,
       animationDelay: `${delay}s`,
     }}>
-      <div style={{
-        width: 52, height: 52, borderRadius: 14,
-        background: color + '18', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        fontSize: 24, flexShrink: 0,
-      }}>
-        {icon}
-      </div>
+
       <div>
         <p style={{
           margin: 0, fontSize: 11, color: C.gray500,
@@ -173,7 +166,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="dashboard-section" style={{ marginBottom: 24 }}>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}>
-            📊 Panel de Control
+             Panel de Control
           </h1>
           <p style={{ margin: '4px 0 0', color: C.gray500, fontSize: 14 }}>
             {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -187,7 +180,7 @@ export default function Dashboard() {
             color: C.error, fontSize: 14, fontWeight: 600,
             animation: 'fadeInUp 0.3s ease',
           }}>
-            ⚠️ {error} — mostrando datos en caché
+             {error} — mostrando datos en caché
           </div>
         )}
 
@@ -197,12 +190,12 @@ export default function Dashboard() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))',
           gap: 16, marginBottom: 24,
         }}>
-          <MetricCard title="Total Inventario"   value={summary?.total_productos}      subtitle="productos registrados" color={C.info}    icon="📦" delay={0.0} />
-          <MetricCard title="Stock Bajo"         value={summary?.productos_bajo_stock} subtitle="requieren reposición" color={C.error}   icon="⚠️" delay={0.1} />
-          <MetricCard title="Pedidos Hoy"        value={summary?.pedidos_hoy}          subtitle="nuevos pedidos"       color={C.brand}   icon="🛒" delay={0.2} />
-          <MetricCard title="Pedidos Pendientes" value={summary?.pedidos_pendientes}   subtitle="por procesar"         color={C.warning} icon="⏳" delay={0.3} />
-          <MetricCard title="Bodegas"            value={summary?.total_bodegas}        subtitle="activas"              color="#8b5cf6"   icon="🏭" delay={0.4} />
-          <MetricCard title="Tiendas"            value={summary?.total_tiendas}        subtitle="activas"              color={C.success} icon="🏪" delay={0.5} />
+          <MetricCard title="Total Inventario"   value={summary?.total_productos}      subtitle="productos registrados" color={C.info}    icon="" delay={0.0} />
+          <MetricCard title="Stock Bajo"         value={summary?.productos_bajo_stock} subtitle="requieren reposición" color={C.error}   icon="" delay={0.1} />
+          <MetricCard title="Pedidos Hoy"        value={summary?.pedidos_hoy}          subtitle="nuevos pedidos"       color={C.brand}   icon="" delay={0.2} />
+          <MetricCard title="Pedidos Pendientes" value={summary?.pedidos_pendientes}   subtitle="por procesar"         color={C.warning} icon="" delay={0.3} />
+          <MetricCard title="Bodegas"            value={summary?.total_bodegas}        subtitle="activas"              color="#8b5cf6"   icon="" delay={0.4} />
+          <MetricCard title="Tiendas"            value={summary?.total_tiendas}        subtitle="activas"              color={C.success} icon="" delay={0.5} />
         </div>
 
         {/* Gráfico + pedidos recientes */}
@@ -215,7 +208,7 @@ export default function Dashboard() {
             animationDelay: '0.3s',
           }}>
             <h3 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.gray800 }}>
-              📈 Ventas Mensuales
+               Ventas Mensuales
             </h3>
             <p style={{ margin: '0 0 8px', fontSize: 12, color: C.gray500 }}>Resumen anual de actividad</p>
             <MiniBarChart />
@@ -228,7 +221,7 @@ export default function Dashboard() {
             animationDelay: '0.4s',
           }}>
             <h3 style={{ margin: '0 0 14px', fontSize: 15, fontWeight: 700, color: C.gray800 }}>
-              🕒 Pedidos Recientes
+               Pedidos Recientes
             </h3>
             {pedidosRecientes.length === 0 ? (
               <p style={{ color: C.gray400, fontSize: 13, textAlign: 'center', padding: '20px 0' }}>
@@ -302,7 +295,7 @@ export default function Dashboard() {
             animationDelay: '0.5s',
           }}>
             <h3 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: C.gray800 }}>
-              🔌 Estado Circuit Breakers
+               Estado Circuit Breakers
             </h3>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {Object.entries(circuitBreakers).map(([svc, state]) => (

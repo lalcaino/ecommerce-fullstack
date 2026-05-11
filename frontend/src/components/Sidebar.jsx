@@ -4,12 +4,12 @@ import { C } from '../style/theme'
 import { getUsuario, logout } from '../services/authService'
 
 const links = [
-  { to: '/dashboard',  icon: '📊', label: 'Dashboard'  },
-  { to: '/inventario', icon: '📦', label: 'Inventario'  },
-  { to: '/pedidos',    icon: '🚚', label: 'Pedidos'     },
-  { to: '/bodegas',    icon: '🏭', label: 'Bodegas'     },
-  { to: '/tiendas',    icon: '🏪', label: 'Tiendas'     },
-  { to: '/envios', icon: '🗺️', label: 'Envíos' }
+  { to: '/dashboard',  icon: '', label: 'Dashboard'  },
+  { to: '/inventario', icon: '', label: 'Inventario'  },
+  { to: '/pedidos',    icon: '', label: 'Pedidos'     },
+  { to: '/bodegas',    icon: '', label: 'Bodegas'     },
+  { to: '/tiendas',    icon: '', label: 'Tiendas'     },
+  { to: '/envios', icon: '', label: 'Envíos' }
 ]
 
 export default function Sidebar() {

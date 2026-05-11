@@ -18,20 +18,20 @@ const C = {
 }
 
 const ESTADO_ENVIO = {
-  PENDIENTE:  { color: C.warning,  icon: '⏳', label: 'Pendiente'  },
-  EN_RUTA:    { color: C.info,     icon: '🚚', label: 'En ruta'    },
-  COMPLETADO: { color: C.success,  icon: '✅', label: 'Completado' },
-  FALLIDO:    { color: C.error,    icon: '❌', label: 'Fallido'    },
-  CANCELADO:  { color: C.gray400,  icon: '🚫', label: 'Cancelado'  },
+  PENDIENTE:  { color: C.warning,  icon: '', label: 'Pendiente'  },
+  EN_RUTA:    { color: C.info,     icon: '', label: 'En ruta'    },
+  COMPLETADO: { color: C.success,  icon: '', label: 'Completado' },
+  FALLIDO:    { color: C.error,    icon: '', label: 'Fallido'    },
+  CANCELADO:  { color: C.gray400,  icon: '', label: 'Cancelado'  },
 }
 
 // Colores y etiquetas para el estado del PEDIDO
 const ESTADO_PEDIDO = {
-  PENDIENTE:   { color: C.warning,  icon: '⏳', label: 'Pedido Pendiente'   },
-  PROCESANDO:  { color: C.info,     icon: '⚙️', label: 'Pedido Procesando'  },
-  ENVIADO:     { color: C.purple,   icon: '📦', label: 'Pedido Enviado'     },
-  ENTREGADO:   { color: C.success,  icon: '✅', label: 'Pedido Entregado'   },
-  CANCELADO:   { color: C.error,    icon: '❌', label: 'Pedido Cancelado'   },
+  PENDIENTE:   { color: C.warning,  icon: '', label: 'Pedido Pendiente'   },
+  PROCESANDO:  { color: C.info,     icon: '', label: 'Pedido Procesando'  },
+  ENVIADO:     { color: C.purple,   icon: '', label: 'Pedido Enviado'     },
+  ENTREGADO:   { color: C.success,  icon: '', label: 'Pedido Entregado'   },
+  CANCELADO:   { color: C.error,    icon: '', label: 'Pedido Cancelado'   },
 }
 
 const TIPO_ENVIO = {
@@ -217,7 +217,7 @@ function GeocoderInput({ value, onChange, onSelect, placeholder }) {
               }}
             >
               <div style={{ fontWeight: 600, color: C.gray800, marginBottom: 2 }}>
-                📍 {f.text}
+                 {f.text}
               </div>
               <div style={{ fontSize: 11, color: C.gray400, lineHeight: 1.4 }}>
                 {f.place_name}
@@ -294,7 +294,7 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
       padding: 20, marginBottom: 16, animation: 'fadeUp .25s ease',
     }}>
       <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: C.gray800 }}>
-        🗺️ Nuevo Envío
+         Nuevo Envío
       </h3>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -307,9 +307,9 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>Tipo</label>
           <select name="tipo" value={form.tipo} onChange={ch} style={inputStyle}>
-            <option value="ESTANDAR">📦 Estándar</option>
-            <option value="EXPRESS">⚡ Express</option>
-            <option value="PROGRAMADO">📅 Programado</option>
+            <option value="ESTANDAR"> Estándar</option>
+            <option value="EXPRESS"> Express</option>
+            <option value="PROGRAMADO"> Programado</option>
           </select>
         </div>
 
@@ -331,7 +331,7 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
 
         <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            📍 Dirección de destino *
+             Dirección de destino *
           </label>
           <GeocoderInput
             value={destinoTexto}
@@ -345,7 +345,7 @@ function NuevoEnvioForm({ conductores, onSubmit, onCancel }) {
               background: C.brandLight, borderRadius: 6,
               padding: '5px 10px', marginTop: 2,
             }}>
-              <span style={{ fontSize: 12 }}>✅</span>
+              <span style={{ fontSize: 12 }}></span>
               <span style={{ fontSize: 11, color: C.brand, fontWeight: 600 }}>
                 Coordenadas: {parseFloat(form.destino_lat).toFixed(5)}, {parseFloat(form.destino_lon).toFixed(5)}
               </span>
@@ -415,7 +415,7 @@ function MapaEnvios({ envios, envioSeleccionado, onEnvioClick, onRutaPersistida 
     const el = document.createElement('div')
     el.className = 'envio-marker'
     el.style.background = C.brandDark
-    el.innerHTML = '🏭'
+    el.innerHTML = ''
     new mapboxgl.Marker({ element: el, anchor: 'center' })
       .setLngLat([BODEGA_CENTRAL.lon, BODEGA_CENTRAL.lat])
       .setPopup(new mapboxgl.Popup({ offset: 20, className: 'map-popup' }).setHTML(
@@ -455,7 +455,7 @@ function MapaEnvios({ envios, envioSeleccionado, onEnvioClick, onRutaPersistida 
       if (isNaN(destLon) || isNaN(destLat)) continue
       bounds.extend([destLon, destLat])
 
-      const estadoEnvio  = ESTADO_ENVIO[envio.estado]   || { color: C.gray500, icon: '📦', label: envio.estado }
+      const estadoEnvio  = ESTADO_ENVIO[envio.estado]   || { color: C.gray500, icon: '', label: envio.estado }
       const estadoPedido = ESTADO_PEDIDO[envio.estado_pedido] || null
 
       const el = document.createElement('div')
@@ -528,7 +528,7 @@ function MapaEnvios({ envios, envioSeleccionado, onEnvioClick, onRutaPersistida 
         const cEl = document.createElement('div')
         cEl.style.cssText = `width:36px;height:36px;border-radius:50%;background:${C.warning};border:3px solid #fff;
           box-shadow:0 3px 10px rgba(245,158,11,.5);display:flex;align-items:center;justify-content:center;font-size:18px;`
-        cEl.innerHTML = '🚚'
+        cEl.innerHTML = ''
         markersRef.current.push(new mapboxgl.Marker({ element: cEl, anchor: 'center' }).setLngLat([posLon, posLat]).addTo(map))
       }
 
@@ -615,7 +615,7 @@ function MapaEnvios({ envios, envioSeleccionado, onEnvioClick, onRutaPersistida 
           background: C.warning + 'ee', borderRadius: 8, padding: '8px 16px',
           fontSize: 12, fontWeight: 600, color: '#7c2d12', zIndex: 20, border: `1px solid ${C.warning}`,
         }}>
-          ⚠️ Configura VITE_MAPBOX_TOKEN en .env.local
+           Configura VITE_MAPBOX_TOKEN en .env.local
         </div>
       )}
     </div>
@@ -654,7 +654,7 @@ function EnvioCard({ envio, seleccionado, onSelect, onEstado, onDelete }) {
 
       {/* Destino */}
       <div style={{ fontSize: 12, marginBottom: 6 }}>
-        <span style={{ color: C.gray400 }}>📍</span>{' '}
+        <span style={{ color: C.gray400 }}></span>{' '}
         <strong style={{ color: C.gray700 }}>{envio.destino_nombre}</strong>
       </div>
 
@@ -669,7 +669,7 @@ function EnvioCard({ envio, seleccionado, onSelect, onEstado, onDelete }) {
       {/* Conductor */}
       {envio.conductor_nombre && (
         <div style={{ fontSize: 11, color: C.gray500, marginBottom: 6 }}>
-          👤 {envio.conductor_nombre}{envio.conductor_tel && <span style={{ marginLeft: 6 }}>· {envio.conductor_tel}</span>}
+           {envio.conductor_nombre}{envio.conductor_tel && <span style={{ marginLeft: 6 }}>· {envio.conductor_tel}</span>}
         </div>
       )}
 
@@ -714,10 +714,10 @@ function EnvioCard({ envio, seleccionado, onSelect, onEstado, onDelete }) {
 function StatsBar({ envios }) {
   const counts = envios.reduce((acc, e) => { acc[e.estado] = (acc[e.estado] || 0) + 1; return acc }, {})
   const stats = [
-    { label: 'Total',       value: envios.length,          color: C.brand,   icon: '🗺️' },
-    { label: 'Pendientes',  value: counts.PENDIENTE || 0,  color: C.warning, icon: '⏳' },
-    { label: 'En ruta',     value: counts.EN_RUTA   || 0,  color: C.info,    icon: '🚚' },
-    { label: 'Completados', value: counts.COMPLETADO || 0, color: C.success, icon: '✅' },
+    { label: 'Total',       value: envios.length,          color: C.brand,   icon: '' },
+    { label: 'Pendientes',  value: counts.PENDIENTE || 0,  color: C.warning, icon: '' },
+    { label: 'En ruta',     value: counts.EN_RUTA   || 0,  color: C.info,    icon: '' },
+    { label: 'Completados', value: counts.COMPLETADO || 0, color: C.success, icon: '' },
   ]
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 16 }}>
@@ -776,7 +776,7 @@ export default function Envios() {
         <div style={{ padding: '20px 20px 12px', borderBottom: `1px solid ${C.gray200}`, background: C.white }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div>
-              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.gray800 }}>🗺️ Envíos</h1>
+              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.gray800 }}> Envíos</h1>
               <p style={{ margin: '2px 0 0', fontSize: 12, color: C.gray500 }}>
                 {envios.length} envíos · {envios.filter(e => e.estado === 'EN_RUTA').length} en ruta
               </p>
@@ -786,7 +786,7 @@ export default function Envios() {
             </Btn>
           </div>
           <input
-            placeholder="🔍 Buscar por destino o ID..."
+            placeholder=" Buscar por destino o ID..."
             value={search} onChange={e => setSearch(e.target.value)}
             style={{
               width: '100%', boxSizing: 'border-box',
@@ -812,7 +812,7 @@ export default function Envios() {
                 border: `1.5px solid ${est?.color || C.brand}`,
                 transition: 'all .15s',
               }}>
-                {est?.icon || '📋'} {k === 'TODOS' ? 'Todos' : est?.label} ({count})
+                {est?.icon || ''} {k === 'TODOS' ? 'Todos' : est?.label} ({count})
               </button>
             )
           })}
@@ -835,7 +835,7 @@ export default function Envios() {
               background: C.error + '12', border: `1px solid ${C.error}30`,
               borderRadius: 10, padding: '10px 14px', marginBottom: 12,
               color: C.error, fontSize: 13, fontWeight: 600,
-            }}>⚠️ {error}</div>
+            }}> {error}</div>
           )}
 
           {loading && (
@@ -859,7 +859,7 @@ export default function Envios() {
 
           {!loading && enviosFiltrados.length === 0 && (
             <div style={{ textAlign: 'center', padding: '32px 16px', color: C.gray400 }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>🗺️</div>
+              <div style={{ fontSize: 36, marginBottom: 8 }}></div>
               <p style={{ fontSize: 13 }}>No hay envíos{filtro !== 'TODOS' ? ` con estado "${ESTADO_ENVIO[filtro]?.label}"` : ''}</p>
             </div>
           )}

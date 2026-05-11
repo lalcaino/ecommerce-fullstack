@@ -24,7 +24,7 @@ function ProductoFactory(tipo) {
   return tipos[tipo] || tipos['FISICO']
 }
 
-const TIPO_ICON = { FISICO: '📦', DIGITAL: '💾', SERVICIO: '🔧' }
+const TIPO_ICON = { FISICO: '', DIGITAL: '', SERVICIO: '' }
 
 function Badge({ color, children }) {
   return (
@@ -82,9 +82,9 @@ function NuevoItemForm({ onSubmit, onCancel }) {
       <div style={{ marginBottom: 14 }}>
         <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px', display: 'block', marginBottom: 4 }}>Tipo</label>
         <select value={tipo} onChange={handleTipo} style={{ border: `1.5px solid ${C.gray200}`, borderRadius: 8, padding: '8px 12px', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}>
-          <option value="FISICO">📦 Físico</option>
-          <option value="DIGITAL">💾 Digital</option>
-          <option value="SERVICIO">🔧 Servicio</option>
+          <option value="FISICO"> Físico</option>
+          <option value="DIGITAL"> Digital</option>
+          <option value="SERVICIO"> Servicio</option>
         </select>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))', gap: 12 }}>
@@ -116,7 +116,7 @@ function ItemRow({ item, onUpdate, onDelete }) {
     <tr style={{ borderBottom: `1px solid ${C.gray100}` }}>
       <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, color: C.gray500 }}>{item.id}</td>
       <td style={{ padding: '12px 16px', fontWeight: 600, color: C.gray800 }}>
-        {TIPO_ICON[item.tipo] || '📦'} {item.nombre}
+        {TIPO_ICON[item.tipo] || ''} {item.nombre}
       </td>
       <td style={{ padding: '12px 16px', color: C.gray500 }}>{item.tipo}</td>
       <td style={{ padding: '12px 16px', fontWeight: 700, color: low ? C.error : C.gray800 }}>
@@ -147,8 +147,8 @@ function ItemRow({ item, onUpdate, onDelete }) {
             </>
           ) : (
             <>
-              <Btn small variant="secondary" onClick={() => setEditMode(true)}>✏️</Btn>
-              <Btn small variant="danger" onClick={() => onDelete(item.id)}>🗑</Btn>
+              <Btn small variant="secondary" onClick={() => setEditMode(true)}></Btn>
+              <Btn small variant="danger" onClick={() => onDelete(item.id)}></Btn>
             </>
           )}
         </div>
@@ -168,7 +168,7 @@ export default function Inventario() {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-      <p style={{ color: C.gray500, fontWeight: 600 }}>⏳ Cargando inventario...</p>
+      <p style={{ color: C.gray500, fontWeight: 600 }}> Cargando inventario...</p>
     </div>
   )
 
@@ -201,7 +201,7 @@ export default function Inventario() {
         {/* Search */}
         <div style={{ marginBottom: 16 }}>
           <input
-            placeholder="🔍 Buscar producto..."
+            placeholder=" Buscar producto..."
             value={search} onChange={e => setSearch(e.target.value)}
             style={{ border: `1.5px solid ${C.gray200}`, borderRadius: 8, padding: '9px 14px', fontSize: 14, fontFamily: 'inherit', outline: 'none', width: 300 }}
           />

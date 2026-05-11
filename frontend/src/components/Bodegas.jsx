@@ -69,20 +69,20 @@ function BodegaCard({ bodega, onDelete, onEdit }) {
     }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <span style={{ fontSize: 22 }}>🏭</span>
+          <span style={{ fontSize: 22 }}></span>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.gray800 }}>{bodega.nombre}</h3>
         </div>
-        <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>📍 {bodega.direccion}</p>
+        <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}> {bodega.direccion}</p>
         <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>
-          📦 Capacidad: <strong style={{ color: C.brand }}>{bodega.capacidad}</strong> unidades
+           Capacidad: <strong style={{ color: C.brand }}>{bodega.capacidad}</strong> unidades
         </p>
         <p style={{ margin: '6px 0 0', fontSize: 12, color: C.gray400 }}>
           Productos almacenados: <strong>{bodega.total_productos ?? 0}</strong>
         </p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Btn small variant="secondary" onClick={() => onEdit(bodega)}>✏️ Editar</Btn>
-        <Btn small variant="danger" onClick={() => onDelete(bodega.id)}>🗑 Eliminar</Btn>
+        <Btn small variant="secondary" onClick={() => onEdit(bodega)}> Editar</Btn>
+        <Btn small variant="danger" onClick={() => onDelete(bodega.id)}> Eliminar</Btn>
       </div>
     </div>
   )
@@ -152,7 +152,7 @@ export default function Bodegas() {
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
       <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🏭</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}></div>
         <p style={{ color: C.gray500, fontWeight: 600 }}>Cargando bodegas...</p>
       </div>
     </div>
@@ -166,7 +166,7 @@ export default function Bodegas() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}>
-              🏭 Gestión de Bodegas
+               Gestión de Bodegas
             </h1>
             <p style={{ margin: '4px 0 0', color: C.gray500, fontSize: 14 }}>
               {bodegas.length} bodegas registradas
@@ -183,7 +183,7 @@ export default function Bodegas() {
             borderRadius: 12, padding: '12px 16px', marginBottom: 20,
             color: C.error, fontSize: 14, fontWeight: 600,
           }}>
-            ⚠️ {error}
+             {error}
           </div>
         )}
 
@@ -198,7 +198,7 @@ export default function Bodegas() {
         {/* Buscador */}
         <div style={{ marginBottom: 20 }}>
           <input
-            placeholder="🔍 Buscar bodega..."
+            placeholder=" Buscar bodega..."
             value={search} onChange={e => setSearch(e.target.value)}
             style={{
               border: `1.5px solid ${C.gray200}`, borderRadius: 8,
@@ -221,7 +221,7 @@ export default function Bodegas() {
           ))}
           {filtered.length === 0 && (
             <div style={{ textAlign: 'center', padding: 48, color: C.gray400 }}>
-              <div style={{ fontSize: 40, marginBottom: 8 }}>🏭</div>
+              <div style={{ fontSize: 40, marginBottom: 8 }}></div>
               <p>No hay bodegas registradas</p>
             </div>
           )}

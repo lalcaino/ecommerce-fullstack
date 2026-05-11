@@ -18,11 +18,11 @@ const C = {
 const ESTADOS_PEDIDO = ['PENDIENTE', 'PROCESANDO', 'ENVIADO', 'ENTREGADO', 'CANCELADO']
 
 const ESTADO_META = {
-  PENDIENTE:  { color: C.gray400,  icon: '🕐', label: 'Pendiente',   envioLabel: null,           desc: 'Esperando procesamiento' },
-  PROCESANDO: { color: C.info,     icon: '⚙️', label: 'Procesando',  envioLabel: 'Envío listo',  desc: 'Envío creado, preparando despacho' },
-  ENVIADO:    { color: '#8b5cf6',  icon: '🚚', label: 'En camino',   envioLabel: 'En ruta',      desc: 'En tránsito hacia el cliente' },
-  ENTREGADO:  { color: C.success,  icon: '✅', label: 'Entregado',   envioLabel: 'Completado',   desc: 'Entregado exitosamente' },
-  CANCELADO:  { color: C.error,    icon: '❌', label: 'Cancelado',   envioLabel: 'Cancelado',    desc: 'Pedido y envío cancelados' },
+  PENDIENTE:  { color: C.gray400,  icon: '', label: 'Pendiente',   envioLabel: null,           desc: 'Esperando procesamiento' },
+  PROCESANDO: { color: C.info,     icon: '', label: 'Procesando',  envioLabel: 'Envío listo',  desc: 'Envío creado, preparando despacho' },
+  ENVIADO:    { color: '#8b5cf6',  icon: '', label: 'En camino',   envioLabel: 'En ruta',      desc: 'En tránsito hacia el cliente' },
+  ENTREGADO:  { color: C.success,  icon: '', label: 'Entregado',   envioLabel: 'Completado',   desc: 'Entregado exitosamente' },
+  CANCELADO:  { color: C.error,    icon: '', label: 'Cancelado',   envioLabel: 'Cancelado',    desc: 'Pedido y envío cancelados' },
 }
 
 // Transiciones válidas desde cada estado (lo que puede elegir el usuario)
@@ -61,7 +61,7 @@ const injectStyles = () => {
 }
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
-function Toast({ mensaje, icono = '✅', color = C.success, onClose }) {
+function Toast({ mensaje, icono = '', color = C.success, onClose }) {
   const [saliendo, setSaliendo] = useState(false)
 
   useEffect(() => {
@@ -108,7 +108,7 @@ function EstadoBadge({ estado }) {
       </span>
       {meta.envioLabel && (
         <span style={{ fontSize: 10, color: meta.color, fontWeight: 600, paddingLeft: 4, opacity: 0.8 }}>
-          🗺️ {meta.envioLabel}
+           {meta.envioLabel}
         </span>
       )}
     </div>
@@ -195,7 +195,7 @@ function NuevoPedidoForm({ tiendas, onSubmit, onCancel }) {
             style={{ ...inputStyle, cursor: 'pointer' }}>
             <option value="">Sin tienda asignada</option>
             {tiendas.map(t => (
-              <option key={t.id} value={t.id}>🏪 {t.nombre} — {t.ciudad}</option>
+              <option key={t.id} value={t.id}> {t.nombre} — {t.ciudad}</option>
             ))}
           </select>
         </div>
@@ -276,7 +276,7 @@ export default function Pedidos() {
 
   const handleEnvioCreado = useCallback((pedido) => {
     setToast({
-      icono: '🗺️',
+      icono: '',
       color: C.brand,
       mensaje: `Pedido <strong>#${pedido?.id}</strong> en procesamiento — envío creado y visible en <strong>🗺️ Envíos</strong>.`,
     })
@@ -321,7 +321,7 @@ export default function Pedidos() {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-      <p style={{ color: C.gray500, fontWeight: 600 }}>⏳ Cargando pedidos...</p>
+      <p style={{ color: C.gray500, fontWeight: 600 }}> Cargando pedidos...</p>
     </div>
   )
 
@@ -332,7 +332,7 @@ export default function Pedidos() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}>🚚 Gestión de Pedidos</h1>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}> Gestión de Pedidos</h1>
             <p style={{ margin: '4px 0 0', color: C.gray500, fontSize: 14 }}>
               {pedidos.length} pedidos · Estados sincronizados con Envíos
             </p>
@@ -353,7 +353,7 @@ export default function Pedidos() {
             background: C.error + '12', border: `1px solid ${C.error}30`,
             borderRadius: 12, padding: '12px 16px', marginBottom: 16,
             color: C.error, fontSize: 14, fontWeight: 600,
-          }}>⚠️ {error}</div>
+          }}> {error}</div>
         )}
 
         {/* Flujo visual */}
@@ -373,7 +373,7 @@ export default function Pedidos() {
         {/* Filtros */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
           <input
-            placeholder="🔍 Buscar cliente..."
+            placeholder=" Buscar cliente..."
             value={search} onChange={e => setSearch(e.target.value)}
             style={{
               border: `1.5px solid ${C.gray200}`, borderRadius: 8,
@@ -395,7 +395,7 @@ export default function Pedidos() {
                   color: active ? '#fff' : color,
                   transition: 'all .15s',
                 }}>
-                  {meta?.icon || '📋'} {meta?.label || e}
+                  {meta?.icon || ''} {meta?.label || e}
                 </button>
               )
             })}
@@ -446,7 +446,7 @@ export default function Pedidos() {
                     <EstadoBadge estado={p.estado} />
                   </td>
                   <td style={{ padding: '12px 14px', fontSize: 13, color: C.gray500 }}>
-                    {p.tienda_nombre ? `🏪 ${p.tienda_nombre}` : '—'}
+                    {p.tienda_nombre ? ` ${p.tienda_nombre}` : '—'}
                   </td>
                   <td style={{ padding: '12px 14px', color: C.gray500, fontSize: 12 }}>
                     {new Date(p.fecha_creacion).toLocaleDateString('es-CL')}

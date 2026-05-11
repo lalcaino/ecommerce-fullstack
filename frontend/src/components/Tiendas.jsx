@@ -63,23 +63,23 @@ function TiendaCard({ tienda, bodegaNombre, onDelete, onEdit }) {
     }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <span style={{ fontSize: 22 }}>🏪</span>
+          <span style={{ fontSize: 22 }}></span>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.gray800 }}>{tienda.nombre}</h3>
         </div>
-        <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>📍 {tienda.direccion}</p>
+        <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}> {tienda.direccion}</p>
         <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>
-          🏙 Ciudad: <strong style={{ color: C.gray700 }}>{tienda.ciudad}</strong>
+           Ciudad: <strong style={{ color: C.gray700 }}>{tienda.ciudad}</strong>
         </p>
         <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>
-          🏭 Bodega: <strong style={{ color: C.brand }}>{bodegaNombre || 'Sin bodega asignada'}</strong>
+           Bodega: <strong style={{ color: C.brand }}>{bodegaNombre || 'Sin bodega asignada'}</strong>
         </p>
         <p style={{ margin: '6px 0 0', fontSize: 12, color: C.gray400 }}>
           Pedidos asociados: <strong>{tienda.total_pedidos ?? 0}</strong>
         </p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Btn small variant="secondary" onClick={() => onEdit(tienda)}>✏️ Editar</Btn>
-        <Btn small variant="danger" onClick={() => onDelete(tienda.id)}>🗑 Eliminar</Btn>
+        <Btn small variant="secondary" onClick={() => onEdit(tienda)}> Editar</Btn>
+        <Btn small variant="danger" onClick={() => onDelete(tienda.id)}> Eliminar</Btn>
       </div>
     </div>
   )
@@ -139,7 +139,7 @@ function NuevaTiendaForm({ inicial, bodegas, onSubmit, onCancel }) {
             <option value="">Sin bodega asignada</option>
             {bodegas.map(b => (
               <option key={b.id} value={b.id}>
-                🏭 {b.nombre} — Cap. {b.capacidad}
+                 {b.nombre} — Cap. {b.capacidad}
               </option>
             ))}
           </select>
@@ -196,7 +196,7 @@ export default function Tiendas() {
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
       <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🏪</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}></div>
         <p style={{ color: C.gray500, fontWeight: 600 }}>Cargando tiendas...</p>
       </div>
     </div>
@@ -208,7 +208,7 @@ export default function Tiendas() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}>🏪 Gestión de Tiendas</h1>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}> Gestión de Tiendas</h1>
             <p style={{ margin: '4px 0 0', color: C.gray500, fontSize: 14 }}>{tiendas.length} tiendas registradas</p>
           </div>
           <Btn onClick={() => { setShowForm(v => !v); setEditando(null) }}>
@@ -221,7 +221,7 @@ export default function Tiendas() {
             background: C.error + '12', border: `1px solid ${C.error}30`,
             borderRadius: 12, padding: '12px 16px', marginBottom: 20,
             color: C.error, fontSize: 14, fontWeight: 600,
-          }}>⚠️ {error}</div>
+          }}> {error}</div>
         )}
 
         {(showForm || editando) && (
@@ -235,7 +235,7 @@ export default function Tiendas() {
 
         <div style={{ marginBottom: 20 }}>
           <input
-            placeholder="🔍 Buscar tienda o ciudad..."
+            placeholder=" Buscar tienda o ciudad..."
             value={search} onChange={e => setSearch(e.target.value)}
             style={{
               border: `1.5px solid ${C.gray200}`, borderRadius: 8,
@@ -258,7 +258,7 @@ export default function Tiendas() {
           ))}
           {filtered.length === 0 && (
             <div style={{ textAlign: 'center', padding: 48, color: C.gray400 }}>
-              <div style={{ fontSize: 40, marginBottom: 8 }}>🏪</div>
+              <div style={{ fontSize: 40, marginBottom: 8 }}></div>
               <p>No hay tiendas registradas</p>
             </div>
           )}

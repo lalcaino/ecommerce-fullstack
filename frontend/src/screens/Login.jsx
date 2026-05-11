@@ -32,9 +32,9 @@ export default function Login() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 40 }}>
             {[
-              { icon: '📦', text: 'Inventario en tiempo real' },
-              { icon: '🚚', text: 'Seguimiento de pedidos' },
-              { icon: '📊', text: 'Reportes automáticos' },
+              { icon: '', text: 'Inventario en tiempo real' },
+              { icon: '', text: 'Seguimiento de pedidos' },
+              { icon: '', text: 'Reportes automáticos' },
             ].map(({ icon, text }) => (
               <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 16px' }}>
                 <span style={{ fontSize: 20 }}>{icon}</span>
@@ -53,7 +53,7 @@ export default function Login() {
 
           {errors.general && (
             <div style={{ background: C.error + '12', border: `1px solid ${C.error}30`, borderRadius: 10, padding: '12px 16px', marginBottom: 20, color: C.error, fontSize: 14, fontWeight: 600 }}>
-              ⚠️ {errors.general}
+               {errors.general}
             </div>
           )}
 
