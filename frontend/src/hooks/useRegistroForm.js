@@ -10,7 +10,7 @@ export function useRegistroForm() {
   const [rutValido, setRutValido] = useState(null)
   const [buscando,  setBuscando]  = useState(false)
   const [empresa,   setEmpresa]   = useState(null)
-  const [giro,      setGiro]      = useState('')
+  const [giro,      setGiro]      = useState({ codigo: '', descripcion: '' })
   const [region,    setRegion]    = useState('')
   const [errRut,    setErrRut]    = useState('')
 
@@ -42,16 +42,28 @@ export function useRegistroForm() {
     try {
       const data = await buscarEmpresa(rut)
       setEmpresa(data)
-      setGiro(data.giro)
+      // Si la empresa trae giro, lo pre-cargamos como descripción libre
+      setGiro({ codigo: '', descripcion: data.giro || '' })
     } catch {
       setErrRut('No se encontró la empresa. Puedes ingresar la razón social manualmente.')
       setEmpresa({ razonSocial: '', giro: '' })
+      setGiro({ codigo: '', descripcion: '' })
     } finally {
       setBuscando(false)
     }
   }
 
   const handleKeyRut = (e) => { if (e.key === 'Enter') handleBuscarRut() }
+
+  // Cuando el usuario selecciona una actividad del autocomplete
+  const handleGiroSelect = (actividad) => {
+    setGiro({ codigo: actividad.codigo, descripcion: actividad.descripcion })
+  }
+
+  // Cuando el usuario limpia o escribe libremente (sin seleccionar)
+  const handleGiroChange = (texto) => {
+    setGiro({ codigo: '', descripcion: texto })
+  }
 
   // ── Paso 2 ──────────────────────────────────────────────────────────────────
 
@@ -75,12 +87,13 @@ export function useRegistroForm() {
     setErrors({})
     try {
       await registroRequest({
-        nombre:      form.nombre,
-        email:       form.email,
-        password:    form.password,
+        nombre:       form.nombre,
+        email:        form.email,
+        password:     form.password,
         rut,
-        razonSocial: empresa?.razonSocial,
-        giro,
+        razonSocial:  empresa?.razonSocial,
+        giro:         giro.descripcion,
+        giro_codigo:  giro.codigo,
         region,
       })
       navigate('/dashboard')
@@ -96,8 +109,9 @@ export function useRegistroForm() {
   return {
     // paso 1
     rut, rutValido, buscando, empresa, giro, region, errRut,
-    setEmpresa, setGiro, setRegion,
+    setEmpresa, setRegion,
     handleRutChange, handleBuscarRut, handleKeyRut,
+    handleGiroSelect, handleGiroChange,
     canAdvance,
     // paso 2
     form, errors, loading,
@@ -105,7 +119,7 @@ export function useRegistroForm() {
   }
 }
 
-// ── Helpers (fuera del hook) ─────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatRut(raw) {
   const clean = raw.replace(/[^0-9kK]/g, '')
@@ -132,7 +146,6 @@ function validarRut(rut) {
 }
 
 async function buscarEmpresa(rut) {
-  // TODO: reemplazar con fetch real a API SII o propia
   await new Promise(r => setTimeout(r, 700))
   const MOCK = {
     '76354771': { razonSocial: 'RETAIL CHILE S.A.',          giro: 'Comercio al por menor'     },
@@ -141,7 +154,7 @@ async function buscarEmpresa(rut) {
     '99554120': { razonSocial: 'SUPERMERCADOS CENTRAL S.A.', giro: 'Comercio al por mayor'      },
     '76001234': { razonSocial: 'MEGASTORE EXPRESS LTDA.',    giro: 'Comercio electrónico'       },
   }
-  const body = rut.replace(/[^0-9]/g, '').slice(0, -1)
+  const body  = rut.replace(/[^0-9]/g, '').slice(0, -1)
   const found = MOCK[body]
   if (found) return found
   throw new Error('RUT no encontrado en el SII')
