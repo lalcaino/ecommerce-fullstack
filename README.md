@@ -30,12 +30,40 @@ bff (Django REST)        :8000   <- API Gateway + Auth JWT
 - Python 3.11+
 - Node.js 18+
 - npm 9+
+- docker
 
 ## Instalación y ejecución
 
 Cada servicio se levanta de forma independiente. Abrir una terminal por componente.
 
+### 0. Postgres
+
+```bash
+pip install psycopg2-binary
+docker run --name smartlogix-db -e POSTGRES_USER=smartlogix -e POSTGRES_PASSWORD=smartlogix123 -e POSTGRES_DB=smartlogix -p 5432:5432 -d postgres
+docker exec -it smartlogix-db psql -U smartlogix -d smartlogix
+CREATE SCHEMA inventario AUTHORIZATION smartlogix;
+CREATE SCHEMA pedidos AUTHORIZATION smartlogix;
+CREATE SCHEMA envios AUTHORIZATION smartlogix;
+\q
+```
+
 ### 1. ms-inventario
+
+Crear un archivo `.env` dentro de `ms-inventario/`:
+
+```
+SECRET_KEY=envios-secret-key
+DEBUG=True
+ 
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=smartlogix
+DB_USER=smartlogix
+DB_PASSWORD=smartlogix123
+DB_HOST=localhost
+DB_PORT=5432
+DB_SCHEMA=envios
+```
 
 ```bash
 cd ms-inventario
@@ -46,6 +74,21 @@ python manage.py runserver 8001
 
 ### 2. ms-pedidos
 
+Crear un archivo `.env` dentro de `ms-pedidos/`:
+
+```
+SECRET_KEY=pedidos-secret-key
+DEBUG=True
+ 
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=smartlogix
+DB_USER=smartlogix
+DB_PASSWORD=smartlogix123
+DB_HOST=localhost
+DB_PORT=5432
+DB_SCHEMA=pedidos
+```
+
 ```bash
 cd ms-pedidos
 pip install -r requirements.txt
@@ -54,6 +97,21 @@ python manage.py runserver 8002
 ```
 
 ### 3. ms-envios
+
+Crear un archivo `.env` dentro de `ms-envios/`:
+
+```
+SECRET_KEY=envios-secret-key
+DEBUG=True
+ 
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=smartlogix
+DB_USER=smartlogix
+DB_PASSWORD=smartlogix123
+DB_HOST=localhost
+DB_PORT=5432
+DB_SCHEMA=envios
+```
 
 ```bash
 cd ms-envios
@@ -67,11 +125,19 @@ python manage.py runserver 8003
 Crear un archivo `.env` dentro de `bff/`:
 
 ```
-SECRET_KEY=tu-clave-secreta
+SECRET_KEY=smartlogix-secret-key-cambiar-en-produccion
 DEBUG=True
 MS_INVENTARIO_URL=http://localhost:8001
 MS_PEDIDOS_URL=http://localhost:8002
 MS_ENVIOS_URL=http://localhost:8003
+ 
+# PostgreSQL centralizado
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=smartlogix
+DB_USER=smartlogix
+DB_PASSWORD=smartlogix123
+DB_HOST=localhost
+DB_PORT=5432
 ```
 
 ```bash

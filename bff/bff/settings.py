@@ -2,6 +2,17 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
+from dotenv import load_dotenv
+import os
+
+
+# Asegúrate de que BASE_DIR esté definido (usualmente ya viene por defecto)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Cargar las variables del archivo .env
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+DB_SCHEMA = os.environ.get('DB_SCHEMA', 'public')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='dev-secret-key-changeme')
@@ -26,8 +37,17 @@ WSGI_APPLICATION = 'bff.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.environ.get('DB_NAME', 'smartlogix'),
+        'USER': os.environ.get('DB_USER', 'smartlogix'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'smartlogix123'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'OPTIONS': {
+            # Esto es la magia: le dice a PostgreSQL que guarde y busque 
+            # las tablas de este microservicio exclusivamente en su esquema.
+            'options': f'-c search_path={DB_SCHEMA},public'
+        }
     }
 }
 
