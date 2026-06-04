@@ -37,6 +37,15 @@ class Pedido(models.Model):
     tienda              = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
     fecha_creacion      = models.DateTimeField(auto_now_add=True)
     fecha_update        = models.DateTimeField(auto_now=True)
+    lat = models.FloatField(
+        null=True,
+        blank=True
+    )
+
+    lon = models.FloatField(
+        null=True,
+        blank=True
+    )
 
     class Meta:
         ordering = ['-fecha_creacion']

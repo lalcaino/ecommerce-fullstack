@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { usePedidos } from '../hooks/usePedidos'
 import { TiendasRepository } from '../services/api'
 
@@ -8,6 +8,113 @@ const C = {
   gray100: '#f3f4f6', gray200: '#e5e7eb', gray300: '#d1d5db',
   gray400: '#9ca3af', gray500: '#6b7280', gray700: '#374151', gray800: '#1f2937',
   success: '#10b981', warning: '#f59e0b', error: '#ef4444', info: '#3b82f6',
+}
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''
+
+function GeocoderInput({ value, onChange, onSelect, placeholder }) {
+  const [query, setQuery] = useState(value || '')
+  const [sugerencias, setSugerencias] = useState([])
+  const [buscando, setBuscando] = useState(false)
+  const [mostrar, setMostrar] = useState(false)
+
+  const debounceRef = useRef(null)
+  const wrapperRef = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setMostrar(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const handleChange = (e) => {
+    const val = e.target.value
+
+    setQuery(val)
+    onChange(val)
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    if (val.length < 3) {
+      setSugerencias([])
+      return
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setBuscando(true)
+
+      try {
+        const url =
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json` +
+          `?access_token=${MAPBOX_TOKEN}&country=cl&language=es&limit=5&types=address,place,locality`
+
+        const res = await fetch(url)
+        const data = await res.json()
+
+        setSugerencias(data.features || [])
+        setMostrar(true)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setBuscando(false)
+      }
+    }, 400)
+  }
+
+  const handleSelect = (feature) => {
+    const [lon, lat] = feature.center
+
+    const direccion = feature.place_name
+
+    setQuery(direccion)
+    setMostrar(false)
+
+    onSelect({
+      direccion,
+      lat,
+      lon
+    })
+  }
+
+  return (
+    <div ref={wrapperRef} style={{ position: 'relative' }}>
+      <input
+        value={query}
+        onChange={handleChange}
+        placeholder={placeholder}
+      />
+
+      {mostrar && sugerencias.length > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            width: '100%',
+            background: '#fff',
+            border: '1px solid #ddd',
+            zIndex: 9999
+          }}
+        >
+          {sugerencias.map((f) => (
+            <div
+              key={f.id}
+              onMouseDown={() => handleSelect(f)}
+              style={{
+                padding: 10,
+                cursor: 'pointer'
+              }}
+            >
+              {f.place_name}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ─── Estado unificado pedido↔envío ───────────────────────────────────────────
@@ -155,7 +262,7 @@ function SelectorEstado({ pedido, onCambiar }) {
 function NuevoPedidoForm({ tiendas, onSubmit, onCancel }) {
   const [form, setForm] = useState({
     cliente: '', email_cliente: '', telefono_cliente: '',
-    direccion_entrega: '', tienda: '', notas: '',
+    direccion_entrega: '', tienda: '', notas: '', lat: null, lon: null
   })
   const change = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
   const labelStyle = { fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }
@@ -179,8 +286,7 @@ function NuevoPedidoForm({ tiendas, onSubmit, onCancel }) {
           { name: 'cliente',           label: 'Cliente',            type: 'text'  },
           { name: 'email_cliente',     label: 'Email cliente',      type: 'email' },
           { name: 'telefono_cliente',  label: 'Teléfono',           type: 'text', placeholder: '+56 9 1234 5678' },
-          { name: 'direccion_entrega', label: 'Dirección entrega',  type: 'text', placeholder: 'Av. Principal 123, Santiago' },
-          { name: 'notas',             label: 'Notas',              type: 'text', placeholder: 'Opcional' },
+          { name: 'notas',             label: 'Notas',              type: 'text', placeholder: 'Opcional' }
         ].map(({ name, label, type, placeholder }) => (
           <div key={name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <label style={labelStyle}>{label}</label>
@@ -188,7 +294,30 @@ function NuevoPedidoForm({ tiendas, onSubmit, onCancel }) {
               onChange={change} placeholder={placeholder}
               style={inputStyle} />
           </div>
+          
         ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+  <label style={labelStyle}>Dirección entrega</label>
+
+  <GeocoderInput
+    value={form.direccion_entrega}
+    placeholder="Buscar dirección..."
+    onChange={(direccion) =>
+      setForm(prev => ({
+        ...prev,
+        direccion_entrega: direccion
+      }))
+    }
+    onSelect={({ direccion, lat, lon }) =>
+      setForm(prev => ({
+        ...prev,
+        direccion_entrega: direccion,
+        lat,
+        lon
+      }))
+    }
+  />
+</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={labelStyle}>Tienda</label>
           <select name="tienda" value={form.tienda} onChange={change}
@@ -201,13 +330,20 @@ function NuevoPedidoForm({ tiendas, onSubmit, onCancel }) {
         </div>
       </div>
       <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-        <button onClick={() => onSubmit({ ...form, tienda: form.tienda ? parseInt(form.tienda) : null })}
-          style={{
-            background: C.success + '18', color: C.success,
-            border: `1px solid ${C.success}30`, borderRadius: 8,
-            padding: '9px 18px', fontSize: 14, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}>
+        
+<button
+  onClick={() => {
+    if (!form.lat || !form.lon) {
+      alert('Debes seleccionar una dirección válida')
+      return
+    }
+
+    onSubmit({
+      ...form,
+      tienda: form.tienda ? parseInt(form.tienda) : null
+    })
+  }}
+>
           ✓ Crear Pedido
         </button>
         <button onClick={onCancel} style={{

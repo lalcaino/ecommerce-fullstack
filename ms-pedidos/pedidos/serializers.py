@@ -37,7 +37,8 @@ class PedidoSerializer(serializers.ModelSerializer):
             'id', 'cliente', 'email_cliente', 'telefono_cliente',
             'direccion_entrega', 'estado', 'total', 'notas',
             'items', 'tienda', 'tienda_nombre', 'tienda_ciudad',
-            'bodega_id', 'fecha_creacion', 'fecha_update',
+            'bodega_id', 'fecha_creacion', 'fecha_update','lat',
+    'lon',
         ]
         read_only_fields = ['id', 'total', 'fecha_creacion', 'fecha_update']
 
