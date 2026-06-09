@@ -1,19 +1,33 @@
 import React from 'react'
 import { Helmet } from 'react-helmet'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
-import Dashboard  from './components/Dashboard'
-import Inventario from './components/Inventario'
-import Pedidos    from './components/Pedidos'
-import Bodegas    from './components/Bodegas'
-import Tiendas    from './components/Tiendas'
-import Sidebar    from './components/Sidebar'
-import Landing    from './screens/Landing'
-import Registro   from './screens/Registro'
-import Login      from './screens/Login'
-import Envios from './components/Envios'
+import Dashboard    from './components/Dashboard'
+import Inventario   from './components/Inventario'
+import Pedidos      from './components/Pedidos'
+import Bodegas      from './components/Bodegas'
+import Tiendas      from './components/Tiendas'
+import Sidebar      from './components/Sidebar'
+import Envios       from './components/Envios'
+import Empleados    from './components/Empleados'
+import Landing      from './screens/Landing'
+import Registro     from './screens/Registro'
+import Login        from './screens/Login'
+import VistaRepartidor from './screens/VistaRepartidor'
 
+import { getUsuario, isAuthenticated } from './services/authService'
 import './style/index.css'
+
+// Rutas protegidas según rol
+function RutaProtegida({ children, soloAdmin = false }) {
+  if (!isAuthenticated()) return <Navigate to="/login" replace />
+  const usuario = getUsuario()
+  // Si es repartidor y quiere acceder a ruta de admin, redirigir a su vista
+  if (soloAdmin && usuario?.rol === 'repartidor') {
+    return <Navigate to="/repartidor" replace />
+  }
+  return children
+}
 
 function AppLayout() {
   return (
@@ -26,7 +40,8 @@ function AppLayout() {
           <Route path="/pedidos"    element={<Pedidos />}    />
           <Route path="/bodegas"    element={<Bodegas />}    />
           <Route path="/tiendas"    element={<Tiendas />}    />
-          <Route path="/envios"    element={<Envios />}    />
+          <Route path="/envios"     element={<Envios />}     />
+          <Route path="/empleados"  element={<Empleados />}  />
         </Routes>
       </main>
     </div>
@@ -44,10 +59,24 @@ export default function App() {
 
       <BrowserRouter>
         <Routes>
+          {/* Públicas */}
           <Route path="/"         element={<Landing />}  />
           <Route path="/login"    element={<Login />}    />
           <Route path="/registro" element={<Registro />} />
-          <Route path="/*"        element={<AppLayout />} />
+
+          {/* Vista repartidor — solo mobile, sin sidebar */}
+          <Route path="/repartidor" element={
+            <RutaProtegida>
+              <VistaRepartidor />
+            </RutaProtegida>
+          } />
+
+          {/* Dashboard admin — solo para rol admin */}
+          <Route path="/*" element={
+            <RutaProtegida soloAdmin>
+              <AppLayout />
+            </RutaProtegida>
+          } />
         </Routes>
       </BrowserRouter>
     </>

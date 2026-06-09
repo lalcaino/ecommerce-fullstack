@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { loginRequest } from '../services/authService'
+import { loginRequest, getUsuario } from '../services/authService'
 
 export function useLoginForm() {
   const navigate = useNavigate()
@@ -24,7 +24,13 @@ export function useLoginForm() {
     setErrors({})
     try {
       await loginRequest(form)
-      navigate('/dashboard')
+      // Redirigir según rol
+      const usuario = getUsuario()
+      if (usuario?.rol === 'repartidor') {
+        navigate('/repartidor')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       setErrors({ general: err.message })
     } finally {
