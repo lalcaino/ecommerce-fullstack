@@ -5,10 +5,10 @@ from .models import ProductoRepository, BodegaRepository
 from .serializers import ProductoSerializer, BodegaSerializer
 
 
-# Vistas de Bodega
 class BodegaListView(APIView):
     def get(self, request):
-        bodegas = BodegaRepository.get_all()
+        empresa_rut = request.query_params.get('empresa_rut')
+        bodegas = BodegaRepository.get_all(empresa_rut=empresa_rut)
         return Response(BodegaSerializer(bodegas, many=True).data)
 
     def post(self, request):
@@ -47,10 +47,10 @@ class BodegaDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# Vistas de Producto
 class ProductoListView(APIView):
     def get(self, request):
-        productos = ProductoRepository.get_all()
+        empresa_rut = request.query_params.get('empresa_rut')
+        productos = ProductoRepository.get_all(empresa_rut=empresa_rut)
         return Response(ProductoSerializer(productos, many=True).data)
 
     def post(self, request):
@@ -112,5 +112,6 @@ class StockAjusteView(APIView):
 
 class BajoStockView(APIView):
     def get(self, request):
-        productos = ProductoRepository.get_bajo_stock()
+        empresa_rut = request.query_params.get('empresa_rut')
+        productos = ProductoRepository.get_bajo_stock(empresa_rut=empresa_rut)
         return Response(ProductoSerializer(productos, many=True).data)
