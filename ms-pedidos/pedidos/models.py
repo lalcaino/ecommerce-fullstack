@@ -3,21 +3,22 @@ from decimal import Decimal
 
 
 ESTADO_CHOICES = [
-    ('PENDIENTE', 'Pendiente'),
+    ('PENDIENTE',  'Pendiente'),
     ('PROCESANDO', 'Procesando'),
-    ('ENVIADO', 'Enviado'),
-    ('ENTREGADO', 'Entregado'),
-    ('CANCELADO', 'Cancelado'),
+    ('ENVIADO',    'Enviado'),
+    ('ENTREGADO',  'Entregado'),
+    ('CANCELADO',  'Cancelado'),
 ]
 
 
 class Tienda(models.Model):
-    nombre    = models.CharField(max_length=200)
-    direccion = models.CharField(max_length=300)
-    ciudad    = models.CharField(max_length=100)
-    bodega_id = models.PositiveIntegerField(null=True, blank=True)
-    activa    = models.BooleanField(default=True)
-    creado_en = models.DateTimeField(auto_now_add=True)
+    empresa_rut = models.CharField(max_length=20, blank=True, db_index=True)
+    nombre      = models.CharField(max_length=200)
+    direccion   = models.CharField(max_length=300)
+    ciudad      = models.CharField(max_length=100)
+    bodega_id   = models.PositiveIntegerField(null=True, blank=True)
+    activa      = models.BooleanField(default=True)
+    creado_en   = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['nombre']
@@ -27,16 +28,17 @@ class Tienda(models.Model):
 
 
 class Pedido(models.Model):
-    cliente             = models.CharField(max_length=200)
-    email_cliente       = models.EmailField()
-    telefono_cliente    = models.CharField(max_length=20, blank=True)
-    direccion_entrega   = models.CharField(max_length=300, blank=True)
-    estado              = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-    total               = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    notas               = models.TextField(blank=True)
-    tienda              = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
-    fecha_creacion      = models.DateTimeField(auto_now_add=True)
-    fecha_update        = models.DateTimeField(auto_now=True)
+    empresa_rut       = models.CharField(max_length=20, blank=True, db_index=True)
+    cliente           = models.CharField(max_length=200)
+    email_cliente     = models.EmailField()
+    telefono_cliente  = models.CharField(max_length=20, blank=True)
+    direccion_entrega = models.CharField(max_length=300, blank=True)
+    estado            = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+    total             = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    notas             = models.TextField(blank=True)
+    tienda            = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
+    fecha_creacion    = models.DateTimeField(auto_now_add=True)
+    fecha_update      = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-fecha_creacion']
@@ -62,16 +64,22 @@ class ItemPedido(models.Model):
 
 class TiendaRepository:
     @staticmethod
-    def get_all():
-        return Tienda.objects.filter(activa=True)
+    def get_all(empresa_rut=None):
+        qs = Tienda.objects.filter(activa=True)
+        if empresa_rut:
+            qs = qs.filter(empresa_rut=empresa_rut)
+        return qs
 
     @staticmethod
     def get_by_id(pk):
         return Tienda.objects.get(pk=pk)
 
     @staticmethod
-    def get_by_bodega(bodega_id):
-        return Tienda.objects.filter(bodega_id=bodega_id, activa=True)
+    def get_by_bodega(bodega_id, empresa_rut=None):
+        qs = Tienda.objects.filter(bodega_id=bodega_id, activa=True)
+        if empresa_rut:
+            qs = qs.filter(empresa_rut=empresa_rut)
+        return qs
 
     @staticmethod
     def create(data):
@@ -89,16 +97,22 @@ class TiendaRepository:
 
 class PedidoRepository:
     @staticmethod
-    def get_all():
-        return Pedido.objects.prefetch_related('items').select_related('tienda').all()
+    def get_all(empresa_rut=None):
+        qs = Pedido.objects.prefetch_related('items').select_related('tienda').all()
+        if empresa_rut:
+            qs = qs.filter(empresa_rut=empresa_rut)
+        return qs
 
     @staticmethod
     def get_by_id(pk):
         return Pedido.objects.prefetch_related('items').select_related('tienda').get(pk=pk)
 
     @staticmethod
-    def get_by_tienda(tienda_id):
-        return Pedido.objects.filter(tienda_id=tienda_id).prefetch_related('items')
+    def get_by_tienda(tienda_id, empresa_rut=None):
+        qs = Pedido.objects.filter(tienda_id=tienda_id).prefetch_related('items')
+        if empresa_rut:
+            qs = qs.filter(empresa_rut=empresa_rut)
+        return qs
 
     @staticmethod
     def create(data):
@@ -119,8 +133,11 @@ class PedidoRepository:
         return Pedido.objects.get(pk=pk)
 
     @staticmethod
-    def get_by_estado(estado):
-        return Pedido.objects.filter(estado=estado)
+    def get_by_estado(estado, empresa_rut=None):
+        qs = Pedido.objects.filter(estado=estado)
+        if empresa_rut:
+            qs = qs.filter(empresa_rut=empresa_rut)
+        return qs
 
     @staticmethod
     def delete(pk):

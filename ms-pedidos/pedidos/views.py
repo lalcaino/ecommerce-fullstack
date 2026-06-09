@@ -5,15 +5,14 @@ from .models import PedidoRepository, PedidoFactory, TiendaRepository
 from .serializers import PedidoSerializer, EstadoUpdateSerializer, TiendaSerializer
 
 
-# Vistas de Tienda
 class TiendaListView(APIView):
     def get(self, request):
-        # Filtro opcional por bodega_id
-        bodega_id = request.query_params.get('bodega_id')
+        empresa_rut = request.query_params.get('empresa_rut')
+        bodega_id   = request.query_params.get('bodega_id')
         if bodega_id:
-            tiendas = TiendaRepository.get_by_bodega(bodega_id)
+            tiendas = TiendaRepository.get_by_bodega(bodega_id, empresa_rut=empresa_rut)
         else:
-            tiendas = TiendaRepository.get_all()
+            tiendas = TiendaRepository.get_all(empresa_rut=empresa_rut)
         return Response(TiendaSerializer(tiendas, many=True).data)
 
     def post(self, request):
@@ -52,15 +51,14 @@ class TiendaDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# Vistas de Pedido
 class PedidoListView(APIView):
     def get(self, request):
-        # Filtro opcional por tienda
-        tienda_id = request.query_params.get('tienda_id')
+        empresa_rut = request.query_params.get('empresa_rut')
+        tienda_id   = request.query_params.get('tienda_id')
         if tienda_id:
-            pedidos = PedidoRepository.get_by_tienda(tienda_id)
+            pedidos = PedidoRepository.get_by_tienda(tienda_id, empresa_rut=empresa_rut)
         else:
-            pedidos = PedidoRepository.get_all()
+            pedidos = PedidoRepository.get_all(empresa_rut=empresa_rut)
         return Response(PedidoSerializer(pedidos, many=True).data)
 
     def post(self, request):
@@ -114,5 +112,6 @@ class PedidoDetailView(APIView):
 
 class PedidosPorEstadoView(APIView):
     def get(self, request, estado):
-        pedidos = PedidoRepository.get_by_estado(estado.upper())
+        empresa_rut = request.query_params.get('empresa_rut')
+        pedidos = PedidoRepository.get_by_estado(estado.upper(), empresa_rut=empresa_rut)
         return Response(PedidoSerializer(pedidos, many=True).data)
