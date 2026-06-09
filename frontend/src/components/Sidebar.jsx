@@ -4,12 +4,13 @@ import { C } from '../style/theme'
 import { getUsuario, logout } from '../services/authService'
 
 const links = [
-  { to: '/dashboard',  icon: '', label: 'Dashboard'  },
-  { to: '/inventario', icon: '', label: 'Inventario'  },
-  { to: '/pedidos',    icon: '', label: 'Pedidos'     },
-  { to: '/bodegas',    icon: '', label: 'Bodegas'     },
-  { to: '/tiendas',    icon: '', label: 'Tiendas'     },
-  { to: '/envios', icon: '', label: 'Envíos' }
+  { to: '/dashboard',  icon: '📊', label: 'Dashboard'  },
+  { to: '/inventario', icon: '📋', label: 'Inventario'  },
+  { to: '/pedidos',    icon: '📦', label: 'Pedidos'     },
+  { to: '/bodegas',    icon: '🏭', label: 'Bodegas'     },
+  { to: '/tiendas',    icon: '🏪', label: 'Tiendas'     },
+  { to: '/envios',     icon: '🚚', label: 'Envíos'      },
+  { to: '/empleados',  icon: '👷', label: 'Empleados'   },
 ]
 
 export default function Sidebar() {
@@ -41,6 +42,24 @@ export default function Sidebar() {
           style={{ height: 150, objectFit: 'contain', margin: '-10px 0' }}
         />
       </div>
+
+      {/* Empresa */}
+      {usuario?.empresa_nombre && (
+        <div style={{
+          padding: '10px 14px', background: C.brandLight,
+          borderBottom: `1px solid ${C.gray200}`,
+        }}>
+          <p style={{ margin: 0, fontSize: 11, color: C.brand, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+            Empresa
+          </p>
+          <p style={{
+            margin: '2px 0 0', fontSize: 13, fontWeight: 700, color: C.gray800,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            {usuario.empresa_nombre}
+          </p>
+        </div>
+      )}
 
       {/* Nav */}
       <nav style={{ padding: '12px 10px', flex: 1 }}>
@@ -77,27 +96,17 @@ export default function Sidebar() {
             {initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{
-              margin: 0, fontSize: 13, fontWeight: 700, color: C.gray800,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.gray800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {usuario?.nombre || 'Usuario'}
             </p>
-            <p style={{
-              margin: 0, fontSize: 11, color: C.gray400,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
+            <p style={{ margin: 0, fontSize: 11, color: C.gray400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {usuario?.email || ''}
             </p>
           </div>
           <button
             onClick={handleLogout}
             title="Cerrar sesión"
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: C.gray400, fontSize: 16, padding: 4, borderRadius: 6,
-              flexShrink: 0, transition: 'color .15s',
-            }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.gray400, fontSize: 16, padding: 4, borderRadius: 6, flexShrink: 0 }}
             onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
             onMouseLeave={e => e.currentTarget.style.color = C.gray400}
           >
