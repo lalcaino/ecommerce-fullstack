@@ -28,7 +28,7 @@ export function useInventario() {
     try {
       const nuevo = await InventarioRepository.create(payload)
       setItems(prev => [...prev, nuevo])
-      return { ok: true }
+      return { ok: true, id: nuevo.id }
     } catch (err) {
       setError(err.detail || 'Error al crear ítem')
       return { ok: false, error: err }
@@ -59,7 +59,18 @@ export function useInventario() {
     }
   }, [])
 
+  const uploadImage = useCallback(async (id, file) => {
+    try {
+      const result = await InventarioRepository.subirImagen(id, file)
+      setItems(prev => prev.map(i => i.id === id ? { ...i, imagen_url: result.imagen_url || result.cloudinary_url } : i))
+      return { ok: true, url: result.imagen_url || result.cloudinary_url }
+    } catch (err) {
+      setError(err.detail || 'Error al subir imagen')
+      return { ok: false }
+    }
+  }, [])
+
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  return { items, loading, error, fetchAll, createItem, updateItem, deleteItem }
+  return { items, loading, error, fetchAll, createItem, updateItem, deleteItem, uploadImage }
 }

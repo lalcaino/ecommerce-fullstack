@@ -2,12 +2,7 @@ import React from "react";
 import Slider from "react-slick";
 import styled from "styled-components";
 // Assets
-import ClientLogo01 from "../../assets/img/clients/logo01.svg"
-import ClientLogo02 from "../../assets/img/clients/logo02.svg";
-import ClientLogo03 from "../../assets/img/clients/logo03.svg";
-import ClientLogo04 from "../../assets/img/clients/logo04.svg";
-import ClientLogo05 from "../../assets/img/clients/logo05.svg";
-import ClientLogo06 from "../../assets/img/clients/logo06.svg";
+import images from "../../config/images";
 
 export default function ClientSlider() {
   const settings = {
@@ -44,34 +39,34 @@ export default function ClientSlider() {
     <div>
       <Slider {...settings}>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo01} alt="client logo" />
+          <ImgStyle src={images.clients[0]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo02} alt="client logo" />
+          <ImgStyle src={images.clients[1]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo03} alt="client logo" />
+          <ImgStyle src={images.clients[2]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo04} alt="client logo" />
+          <ImgStyle src={images.clients[3]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo05} alt="client logo" />
+          <ImgStyle src={images.clients[4]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo06} alt="client logo" />
+          <ImgStyle src={images.clients[5]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo03} alt="client logo" />
+          <ImgStyle src={images.clients[2]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo04} alt="client logo" />
+          <ImgStyle src={images.clients[3]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo01} alt="client logo" />
+          <ImgStyle src={images.clients[0]} alt="client logo" />
         </LogoWrapper>
         <LogoWrapper className="flexCenter">
-          <ImgStyle src={ClientLogo02} alt="client logo" />
+          <ImgStyle src={images.clients[1]} alt="client logo" />
         </LogoWrapper>
       </Slider>
     </div>
@@ -91,4 +86,5 @@ const ImgStyle = styled.img`
   width: 100%;
   height: 100%;
   padding: 10%;
+  object-fit: contain;
 `;

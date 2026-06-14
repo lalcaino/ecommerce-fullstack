@@ -108,6 +108,13 @@ export const InventarioRepository = {
   create:          (data)     => inventarioCB.call(() => http.post('/inventario/', data)),
   update:          (id, data) => inventarioCB.call(() => http.put(`/inventario/${id}/`, data)),
   delete:          (id)       => inventarioCB.call(() => http.delete(`/inventario/${id}/`)),
+  subirImagen:     (id, file) => {
+    const formData = new FormData()
+    formData.append('imagen', file)
+    return inventarioCB.call(() => http.post(`/inventario/${id}/imagen/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }))
+  },
   getCircuitState: ()         => inventarioCB.getState(),
 }
 

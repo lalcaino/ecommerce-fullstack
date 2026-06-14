@@ -33,6 +33,7 @@ class Producto(models.Model):
     peso_kg        = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True)
     url_descarga   = models.URLField(null=True, blank=True)
     duracion_dias  = models.PositiveIntegerField(null=True, blank=True)
+    imagen_url     = models.URLField(null=True, blank=True)
     activo         = models.BooleanField(default=True)
     bodega         = models.ForeignKey(Bodega, null=True, blank=True, on_delete=models.SET_NULL, related_name='productos')
     creado_en      = models.DateTimeField(auto_now_add=True)

@@ -349,16 +349,17 @@ function SelectorProductos({ productos, items, onChange }) {
 function NuevoPedidoForm({ tiendas, productos, onSubmit, onCancel }) {
   const [form, setForm] = useState({
     cliente: '', email_cliente: '', telefono_cliente: '',
-    direccion_entrega: '', tienda: '', notas: '',
+    direccion_entrega: '', latitud_entrega: '', longitud_entrega: '',
+    tienda: '', notas: '',
   })
   const [items,         setItems]         = useState([])
   const [direccionTexto, setDireccionTexto] = useState('')
 
   const change = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
 
-  const handleDireccionSelect = ({ nombre }) => {
+  const handleDireccionSelect = ({ nombre, lat, lon }) => {
     setDireccionTexto(nombre)
-    setForm(p => ({ ...p, direccion_entrega: nombre }))
+    setForm(p => ({ ...p, direccion_entrega: nombre, latitud_entrega: lat, longitud_entrega: lon }))
   }
 
   const handleDireccionChange = (val) => {
@@ -431,7 +432,13 @@ function NuevoPedidoForm({ tiendas, productos, onSubmit, onCancel }) {
       </div>
 
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <button onClick={() => onSubmit({ ...form, tienda: form.tienda ? parseInt(form.tienda) : null, items: items.map(i => ({ producto_id: i.producto_id, nombre_producto: i.nombre_producto, cantidad: i.cantidad, precio_unitario: i.precio_unitario })) })}
+        <button onClick={() => onSubmit({
+              ...form,
+              latitud_entrega: form.latitud_entrega ? parseFloat(form.latitud_entrega) : null,
+              longitud_entrega: form.longitud_entrega ? parseFloat(form.longitud_entrega) : null,
+              tienda: form.tienda ? parseInt(form.tienda) : null,
+              items: items.map(i => ({ producto_id: i.producto_id, nombre_producto: i.nombre_producto, cantidad: i.cantidad, precio_unitario: i.precio_unitario })),
+            })}
           style={{ background: C.success + '18', color: C.success, border: `1px solid ${C.success}30`, borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           ✓ Crear Pedido {total > 0 && `— $${total.toLocaleString('es-CL')}`}
         </button>
