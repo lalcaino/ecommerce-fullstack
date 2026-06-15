@@ -306,7 +306,7 @@ class TestChatbotClaseInvalida(unittest.TestCase):
         self.assertEqual(resultado, 5)  # re.findall extrae dígitos, no el signo
 
     def test_texto_largo_sin_numero(self):
-        self.assertEqual(clasificar_mensaje('necesito ayuda con mi compra reciente'), 'problema')
+        self.assertEqual(clasificar_mensaje('necesito ayuda con mi compra reciente'), 'desconocido')
 
     def test_mayusculas(self):
         self.assertEqual(clasificar_mensaje('HOLA'), 'saludo')

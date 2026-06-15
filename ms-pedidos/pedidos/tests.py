@@ -126,12 +126,9 @@ class TestTiendaRepositoryClaseInvalida(TestCase):
         with self.assertRaises(Exception):
             TiendaRepository.get_by_id(99999)
 
-    def test_update_id_inexistente_no_lanza(self):
-        # update con id inexistente no falla (filter vacío)
-        result = TiendaRepository.update(99999, {'ciudad': 'X'})
-        # Lanza DoesNotExist al hacer get
-        # Esto verifica que el update falla de forma controlada
-        self.assertIsNotNone(result or True)
+    def test_update_id_inexistente_lanza_excepcion(self):
+        with self.assertRaises(Exception):
+            TiendaRepository.update(99999, {'ciudad': 'X'})
 
     def test_filtro_empresa_rut_inexistente_retorna_vacio(self):
         qs = TiendaRepository.get_all(empresa_rut='00.000.000-0')
