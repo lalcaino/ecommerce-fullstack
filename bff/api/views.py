@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .gateway import MicroserviceGateway
+from .cloudinary_views import eliminar_imagen_cloudinary
 
 logger = logging.getLogger(__name__)
 
@@ -64,8 +65,8 @@ def _crear_envio_para_pedido(pedido: dict, empresa_rut: str = ''):
         'origen_lat':     str(BODEGA_CENTRAL_LAT),
         'origen_lon':     str(BODEGA_CENTRAL_LON),
         'destino_nombre': destino_nombre,
-        'destino_lat':    str(SANTIAGO_LAT),
-        'destino_lon':    str(SANTIAGO_LON),
+        'destino_lat':    str(pedido.get('latitud_entrega') or SANTIAGO_LAT),
+        'destino_lon':    str(pedido.get('longitud_entrega') or SANTIAGO_LON),
         'notas': f"Pedido de {pedido.get('cliente', '')}",
     }
     try:
@@ -152,6 +153,13 @@ class InventarioDetailView(APIView):
 
     def delete(self, request, pk):
         try:
+            try:
+                producto = MicroserviceGateway.get_producto(pk)
+                if producto.get('imagen_url'):
+                    public_id = f'smartlogix/productos/producto_{pk}'
+                    eliminar_imagen_cloudinary(public_id)
+            except Exception:
+                pass
             MicroserviceGateway.delete_producto(pk)
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as exc:

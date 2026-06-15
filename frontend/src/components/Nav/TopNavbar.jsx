@@ -7,8 +7,8 @@ import Sidebar from "../Nav/Sidebar";
 import Backdrop from "../Elements/Backdrop";
 
 // Assets
-import Logo from "../../assets/img/logo.png";
 import BurgerIcon from "../../assets/svg/BurgerIcon";
+import images from "../../config/images";
 
 export default function TopNavbar() {
   const [y, setY] = useState(window.scrollY);
@@ -35,11 +35,11 @@ export default function TopNavbar() {
         <NavInner className="container flexSpaceCenter">
           <Link className="pointer flexNullCenter" to="home" smooth={true} style={{ transition: "all 0.3s ease" }}>
             <img
-              src={Logo}
+              src={images.logo}
               alt="SmartLogix Logo"
               style={{
-                width: y > 100 ? "120px" : "180px",
-                height: y > 100 ? "120px" : "180px",
+                width: y > 100 ? "80px" : "110px",
+                height: y > 100 ? "80px" : "110px",
                 objectFit: "contain",
                 transition: "all 0.3s ease" 
               }}
@@ -47,12 +47,12 @@ export default function TopNavbar() {
 
             <h1
               style={{
-                marginLeft: y > 100 ? "-40px" : "-55px",
+                marginLeft: y > 100 ? "-25px" : "-35px",
                 color: "#408A71",
-                fontSize: y > 100 ? "16px" : "20px",  // ← achica con el scroll
+                fontSize: y > 100 ? "16px" : "20px",
                 transition: "all 0.3s ease"
               }}
-              className="extraBold"  // ← quita "font20" para que no lo sobreescriba
+              className="extraBold"
             >
               SmartLogix
             </h1>
@@ -89,45 +89,6 @@ export default function TopNavbar() {
                 offset={-80}
               >
                 Servicios
-              </Link>
-            </li>
-
-            <li className="semiBold font15 pointer">
-              <Link
-                activeClass="active"
-                style={{ padding: "10px 15px" }}
-                to="projects"
-                spy={true}
-                smooth={true}
-                offset={-80}
-              >
-                Proyectos
-              </Link>
-            </li>
-
-            <li className="semiBold font15 pointer">
-              <Link
-                activeClass="active"
-                style={{ padding: "10px 15px" }}
-                to="blog"
-                spy={true}
-                smooth={true}
-                offset={-80}
-              >
-                Blog
-              </Link>
-            </li>
-
-            <li className="semiBold font15 pointer">
-              <Link
-                activeClass="active"
-                style={{ padding: "10px 15px" }}
-                to="pricing"
-                spy={true}
-                smooth={true}
-                offset={-80}
-              >
-                Planes
               </Link>
             </li>
 

@@ -81,6 +81,11 @@ MS_INVENTARIO_URL = config('MS_INVENTARIO_URL', default='http://localhost:8001')
 MS_PEDIDOS_URL    = config('MS_PEDIDOS_URL',    default='http://localhost:8002')
 MS_ENVIOS_URL = config('MS_ENVIOS_URL', default='http://localhost:8003')
 
+# Cloudinary
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_API_KEY    = config('CLOUDINARY_API_KEY',    default='')
+CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET', default='')
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LANGUAGE_CODE = 'es-cl'

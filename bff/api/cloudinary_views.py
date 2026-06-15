@@ -8,47 +8,33 @@ from .gateway import MicroserviceGateway
 
 logger = logging.getLogger(__name__)
 
-# ─── Cloudinary ───────────────────────────────────────────────────────────────
-# Cuando tengas las credenciales, agrégalas al .env del BFF:
-#
-#   CLOUDINARY_CLOUD_NAME=tu_cloud_name
-#   CLOUDINARY_API_KEY=tu_api_key
-#   CLOUDINARY_API_SECRET=tu_api_secret
-#
-# Y ejecuta: pip install cloudinary
-# Luego descomenta las líneas marcadas con [CLOUDINARY]
+import cloudinary
+import cloudinary.uploader
+from django.conf import settings
 
-# [CLOUDINARY] import cloudinary
-# [CLOUDINARY] import cloudinary.uploader
-# [CLOUDINARY] from django.conf import settings
-# [CLOUDINARY]
-# [CLOUDINARY] cloudinary.config(
-# [CLOUDINARY]     cloud_name = settings.CLOUDINARY_CLOUD_NAME,
-# [CLOUDINARY]     api_key    = settings.CLOUDINARY_API_KEY,
-# [CLOUDINARY]     api_secret = settings.CLOUDINARY_API_SECRET,
-# [CLOUDINARY] )
+cloudinary.config(
+    cloud_name = settings.CLOUDINARY_CLOUD_NAME,
+    api_key    = settings.CLOUDINARY_API_KEY,
+    api_secret = settings.CLOUDINARY_API_SECRET,
+)
 
-CLOUDINARY_READY = False  # Cambiar a True cuando estén las credenciales
+CLOUDINARY_READY = True
 
 
 def subir_imagen_cloudinary(archivo, carpeta='smartlogix', public_id=None):
-    """
-    Sube una imagen a Cloudinary y retorna la URL segura.
-    Descomenta cuando tengas las credenciales.
-    """
-    # [CLOUDINARY]
-    # result = cloudinary.uploader.upload(
-    #     archivo,
-    #     folder=carpeta,
-    #     public_id=public_id,
-    #     overwrite=True,
-    #     resource_type='image',
-    # )
-    # return result.get('secure_url', '')
+    result = cloudinary.uploader.upload(
+        archivo,
+        folder=carpeta,
+        public_id=public_id,
+        overwrite=True,
+        resource_type='image',
+    )
+    return result.get('secure_url', '')
 
-    # Simulado — retorna URL vacía hasta tener credenciales
-    logger.info('[Cloudinary simulado] Archivo recibido: %s', getattr(archivo, 'name', 'unknown'))
-    return ''
+
+def eliminar_imagen_cloudinary(public_id_completo):
+    result = cloudinary.uploader.destroy(public_id_completo)
+    return result.get('result') == 'ok'
 
 
 class FotoEntregaView(APIView):
@@ -147,6 +133,8 @@ class SubirImagenProductoView(APIView):
             carpeta='smartlogix/productos',
             public_id=f'producto_{pk}',
         )
+
+        MicroserviceGateway.patch_producto(pk, {'imagen_url': url_imagen})
 
         return Response({
             'detail':    'Imagen subida exitosamente.',

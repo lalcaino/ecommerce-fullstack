@@ -7,8 +7,11 @@ class ConductorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = Conductor
-        fields = ['id', 'nombre', 'telefono', 'patente', 'disponible', 'creado_en', 'total_envios']
+        fields = ['id', 'empresa_rut', 'nombre', 'telefono', 'patente', 'disponible', 'creado_en', 'total_envios']
         read_only_fields = ['id', 'creado_en']
+        extra_kwargs = {
+            'empresa_rut': {'required': False, 'allow_blank': True},
+        }
 
     def get_total_envios(self, obj):
         return obj.envios.count()
@@ -38,7 +41,7 @@ class EnvioSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Envio
         fields = [
-            'id', 'pedido_id', 'conductor', 'conductor_nombre', 'conductor_tel',
+            'id', 'empresa_rut', 'pedido_id', 'conductor', 'conductor_nombre', 'conductor_tel',
             'tipo', 'estado',
             'origen_nombre', 'origen_lat', 'origen_lon',
             'destino_nombre', 'destino_lat', 'destino_lon',
@@ -48,6 +51,9 @@ class EnvioSerializer(serializers.ModelSerializer):
             'notas', 'fecha_estimada', 'fecha_creacion', 'fecha_update',
         ]
         read_only_fields = ['id', 'fecha_creacion', 'fecha_update', 'eventos']
+        extra_kwargs = {
+            'empresa_rut': {'required': False, 'allow_blank': True},
+        }
 
     def create(self, validated_data):
         from .models import EnvioRepository
@@ -62,7 +68,7 @@ class EnvioListSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Envio
         fields = [
-            'id', 'pedido_id', 'conductor', 'conductor_nombre',
+            'id', 'empresa_rut', 'pedido_id', 'conductor', 'conductor_nombre',
             'tipo', 'estado',
             'origen_nombre', 'origen_lat', 'origen_lon',
             'destino_nombre', 'destino_lat', 'destino_lon',
@@ -70,6 +76,9 @@ class EnvioListSerializer(serializers.ModelSerializer):
             'distancia_km', 'duracion_min',
             'paradas', 'fecha_estimada', 'fecha_creacion',
         ]
+        extra_kwargs = {
+            'empresa_rut': {'required': False, 'allow_blank': True},
+        }
 
 
 class PosicionUpdateSerializer(serializers.Serializer):

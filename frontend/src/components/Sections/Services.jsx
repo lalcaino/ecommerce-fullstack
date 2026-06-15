@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 // Components
@@ -14,12 +15,16 @@ import {
 } from "react-icons/fa";
 
 // Assets
-import AddImage1 from "../../assets/img/add/1.png";
-import AddImage2 from "../../assets/img/add/2.png";
-import AddImage3 from "../../assets/img/add/3.png";
-import AddImage4 from "../../assets/img/add/4.png";
+import images from "../../config/images";
 
 export default function Services() {
+  const navigate = useNavigate();
+
+  const scrollToContact = () => {
+    const el = document.getElementById("contact");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <Wrapper id="services">
       <div className="lightBg" style={{ padding: "50px 0" }}>
@@ -132,7 +137,7 @@ export default function Services() {
                   <div style={{ width: "190px" }}>
                     <FullButton
                       title="Comenzar"
-                      action={() => alert("clicked")}
+                      action={() => navigate("/registro")}
                     />
                   </div>
 
@@ -144,7 +149,7 @@ export default function Services() {
                   >
                     <FullButton
                       title="Contactar"
-                      action={() => alert("clicked")}
+                      action={scrollToContact}
                       border
                     />
                   </div>
@@ -155,21 +160,21 @@ export default function Services() {
                 <AddRightInner>
                   <div className="flexNullCenter">
                     <AddImgWrapp1 className="flexCenter">
-                      <img src={AddImage1} alt="logistics" />
+                      <img src={images.add[0]} alt="logistics" />
                     </AddImgWrapp1>
 
                     <AddImgWrapp2>
-                      <img src={AddImage2} alt="transport" />
+                      <img src={images.add[1]} alt="transport" />
                     </AddImgWrapp2>
                   </div>
 
                   <div className="flexNullCenter">
                     <AddImgWrapp3>
-                      <img src={AddImage3} alt="warehouse" />
+                      <img src={images.add[2]} alt="warehouse" />
                     </AddImgWrapp3>
 
                     <AddImgWrapp4>
-                      <img src={AddImage4} alt="delivery" />
+                      <img src={images.add[3]} alt="delivery" />
                     </AddImgWrapp4>
                   </div>
                 </AddRightInner>
@@ -316,6 +321,8 @@ const AddImgWrapp1 = styled.div`
 
   img {
     width: 100%;
+    max-height: 200px;
+    object-fit: cover;
     border-radius: 1rem;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
   }
@@ -327,6 +334,8 @@ const AddImgWrapp2 = styled.div`
 
   img {
     width: 100%;
+    max-height: 150px;
+    object-fit: cover;
     border-radius: 1rem;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
   }
@@ -338,6 +347,8 @@ const AddImgWrapp3 = styled.div`
 
   img {
     width: 100%;
+    max-height: 120px;
+    object-fit: cover;
     border-radius: 1rem;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
   }
@@ -349,6 +360,8 @@ const AddImgWrapp4 = styled.div`
 
   img {
     width: 100%;
+    max-height: 150px;
+    object-fit: cover;
     border-radius: 1rem;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
   }

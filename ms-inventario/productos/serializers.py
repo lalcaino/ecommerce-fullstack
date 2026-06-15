@@ -7,8 +7,11 @@ class BodegaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Bodega
-        fields = ['id', 'nombre', 'direccion', 'capacidad', 'activa', 'creado_en', 'total_productos']
+        fields = ['id', 'empresa_rut', 'nombre', 'direccion', 'capacidad', 'activa', 'creado_en', 'total_productos']
         read_only_fields = ['id', 'creado_en']
+        extra_kwargs = {
+            'empresa_rut': {'required': False, 'allow_blank': True},
+        }
 
     def get_total_productos(self, obj):
         return obj.productos.count()
@@ -21,10 +24,13 @@ class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
         fields = [
-            'id', 'nombre', 'descripcion', 'tipo', 'precio',
+            'id', 'empresa_rut', 'nombre', 'descripcion', 'tipo', 'precio',
             'stock', 'stock_minimo', 'bajo_stock',
-            'peso_kg', 'url_descarga', 'duracion_dias',
+            'peso_kg', 'url_descarga', 'duracion_dias', 'imagen_url',
             'activo', 'bodega', 'bodega_nombre',
             'creado_en', 'actualizado_en',
         ]
         read_only_fields = ['id', 'creado_en', 'actualizado_en', 'bajo_stock']
+        extra_kwargs = {
+            'empresa_rut': {'required': False, 'allow_blank': True},
+        }

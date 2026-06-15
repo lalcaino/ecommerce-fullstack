@@ -3,9 +3,9 @@ import styled from "styled-components";
 // Components
 import FullButton from "../Buttons/FullButton";
 // Assets
-import HeaderImage from "../../assets/img/header-img.png";
 import QuotesIcon from "../../assets/svg/Quotes";
 import Dots from "../../assets/svg/Dots";
+import images from "../../config/images";
 import {
   FaTruck,
   FaRoute,
@@ -30,7 +30,7 @@ Reducimos costos operativos y mejoramos tiempos de entrega mediante optimizació
       </LeftSide>
       <RightSide>
         <ImageWrapper>
-          <Img className="radius8" src={HeaderImage} alt="office" style={{zIndex: 9}} />
+          <Img className="radius8" src={images.header} alt="office" style={{zIndex: 9}} />
         
           <DotsWrapper>
           </DotsWrapper>
@@ -110,6 +110,9 @@ const ImageWrapper = styled.div`
   }
 `;
 const Img = styled.img`
+  max-width: 100%;
+  height: auto;
+  max-height: 500px;
   @media (max-width: 560px) {
     width: 80%;
     height: auto;

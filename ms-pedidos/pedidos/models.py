@@ -1,5 +1,6 @@
 from django.db import models
 from decimal import Decimal
+from decimal import Decimal
 
 
 ESTADO_CHOICES = [
@@ -33,6 +34,8 @@ class Pedido(models.Model):
     email_cliente     = models.EmailField()
     telefono_cliente  = models.CharField(max_length=20, blank=True)
     direccion_entrega = models.CharField(max_length=300, blank=True)
+    latitud_entrega   = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitud_entrega  = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     estado            = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
     total             = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     notas             = models.TextField(blank=True)

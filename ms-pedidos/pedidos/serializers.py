@@ -8,10 +8,13 @@ class TiendaSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Tienda
         fields = [
-            'id', 'nombre', 'direccion', 'ciudad',
+            'id', 'empresa_rut', 'nombre', 'direccion', 'ciudad',
             'bodega_id', 'activa', 'creado_en', 'total_pedidos',
         ]
         read_only_fields = ['id', 'creado_en']
+        extra_kwargs = {
+            'empresa_rut': {'required': False, 'allow_blank': True},
+        }
 
     def get_total_pedidos(self, obj):
         return obj.pedidos.count()
@@ -34,12 +37,15 @@ class PedidoSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Pedido
         fields = [
-            'id', 'cliente', 'email_cliente', 'telefono_cliente',
-            'direccion_entrega', 'estado', 'total', 'notas',
+            'id', 'empresa_rut', 'cliente', 'email_cliente', 'telefono_cliente',
+            'direccion_entrega', 'latitud_entrega', 'longitud_entrega', 'estado', 'total', 'notas',
             'items', 'tienda', 'tienda_nombre', 'tienda_ciudad',
             'bodega_id', 'fecha_creacion', 'fecha_update',
         ]
         read_only_fields = ['id', 'total', 'fecha_creacion', 'fecha_update']
+        extra_kwargs = {
+            'empresa_rut': {'required': False, 'allow_blank': True},
+        }
 
 
 class EstadoUpdateSerializer(serializers.Serializer):

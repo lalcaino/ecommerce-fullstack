@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { useInventario } from '../hooks/useInventario'
+import { FiImage, FiEdit2, FiTrash2 } from 'react-icons/fi'
 
 const C = {
   brand: '#408A71', brandLight: '#e8f5f0',
@@ -67,6 +68,7 @@ function InputField({ label, name, value, onChange, type = 'text' }) {
 function NuevoItemForm({ onSubmit, onCancel }) {
   const [tipo, setTipo] = useState('FISICO')
   const [form, setForm] = useState(ProductoFactory('FISICO'))
+  const [imagenFile, setImagenFile] = useState(null)
 
   const handleTipo = (e) => {
     setTipo(e.target.value)
@@ -93,23 +95,38 @@ function NuevoItemForm({ onSubmit, onCancel }) {
             type={['precio','stock','peso_kg','duracion_dias'].includes(k) ? 'number' : 'text'}
           />
         ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>Imagen (opcional)</label>
+          <input type="file" accept="image/*" onChange={e => setImagenFile(e.target.files[0])}
+            style={{ border: `1.5px solid ${C.gray200}`, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontFamily: 'inherit' }}
+          />
+        </div>
       </div>
       <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-        <Btn variant="success" onClick={() => onSubmit({ ...form, tipo })}>✓ Crear Producto</Btn>
+        <Btn variant="success" onClick={() => onSubmit({ ...form, tipo }, imagenFile)}>✓ Crear Producto</Btn>
         <Btn variant="secondary" onClick={onCancel}>Cancelar</Btn>
       </div>
     </div>
   )
 }
 
-function ItemRow({ item, onUpdate, onDelete }) {
+function ItemRow({ item, onUpdate, onDelete, onUploadImage }) {
   const [editMode, setEditMode] = useState(false)
   const [form, setForm] = useState({ stock: item.stock, precio: item.precio })
+  const [uploading, setUploading] = useState(false)
   const low = item.stock <= item.stock_minimo
 
   const save = async () => {
     const res = await onUpdate(item.id, form)
     if (res.ok) setEditMode(false)
+  }
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    await onUploadImage(item.id, file)
+    setUploading(false)
   }
 
   return (
@@ -138,8 +155,14 @@ function ItemRow({ item, onUpdate, onDelete }) {
       <td style={{ padding: '12px 16px' }}>
         {low ? <Badge color={C.error}>⚠ Stock bajo</Badge> : <Badge color={C.success}>✓ OK</Badge>}
       </td>
+      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+        {item.imagen_url
+          ? <img src={item.imagen_url} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover' }} />
+          : <span style={{ color: C.gray400, fontSize: 12 }}>—</span>
+        }
+      </td>
       <td style={{ padding: '12px 16px' }}>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {editMode ? (
             <>
               <Btn small variant="success" onClick={save}>Guardar</Btn>
@@ -147,8 +170,14 @@ function ItemRow({ item, onUpdate, onDelete }) {
             </>
           ) : (
             <>
-              <Btn small variant="secondary" onClick={() => setEditMode(true)}></Btn>
-              <Btn small variant="danger" onClick={() => onDelete(item.id)}></Btn>
+              <input type="file" accept="image/*" id={`img-${item.id}`} style={{ display: 'none' }} onChange={handleFile} />
+              <label htmlFor={`img-${item.id}`} style={{ cursor: 'pointer' }}>
+                <span style={{ background: C.info + '18', color: C.info, border: `1px solid ${C.info}30`, borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
+                  {uploading ? '...' : <FiImage size={14} />}
+                </span>
+              </label>
+              <Btn small variant="secondary" onClick={() => setEditMode(true)}><FiEdit2 size={14} /></Btn>
+              <Btn small variant="danger" onClick={() => onDelete(item.id)}><FiTrash2 size={14} /></Btn>
             </>
           )}
         </div>
@@ -158,7 +187,7 @@ function ItemRow({ item, onUpdate, onDelete }) {
 }
 
 export default function Inventario() {
-  const { items, loading, error, createItem, updateItem, deleteItem } = useInventario()
+  const { items, loading, error, createItem, updateItem, deleteItem, uploadImage } = useInventario()
   const [showForm, setShowForm] = useState(false)
   const [search,   setSearch]   = useState('')
 
@@ -193,7 +222,7 @@ export default function Inventario() {
 
         {showForm && (
           <NuevoItemForm
-            onSubmit={async (data) => { const res = await createItem(data); if (res.ok) setShowForm(false) }}
+            onSubmit={async (data, file) => { const res = await createItem(data); if (res.ok) { if (file) await uploadImage(res.id, file); setShowForm(false) } }}
             onCancel={() => setShowForm(false)}
           />
         )}
@@ -212,14 +241,14 @@ export default function Inventario() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: C.gray100, borderBottom: `1px solid ${C.gray200}` }}>
-                {['ID','Nombre','Tipo','Stock','Precio','Estado','Acciones'].map(h => (
+                {['ID','Nombre','Tipo','Stock','Precio','Estado','Imagen','Acciones'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: C.gray500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map(item => (
-                <ItemRow key={item.id} item={item} onUpdate={updateItem} onDelete={deleteItem} />
+                <ItemRow key={item.id} item={item} onUpdate={updateItem} onDelete={deleteItem} onUploadImage={uploadImage} />
               ))}
             </tbody>
           </table>
