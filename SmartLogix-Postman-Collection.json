@@ -1,0 +1,452 @@
+{
+  "info": {
+    "name": "SmartLogix - API Ecommerce Fullstack",
+    "description": "Colección de Postman para la API REST de SmartLogix.\n\nArquitectura:\n- BFF (API Gateway): http://localhost:8000/api/\n- ms-inventario: http://localhost:8001/api/\n- ms-pedidos: http://localhost:8002/api/\n- ms-envios: http://localhost:8003/api/\n\nAutenticación: JWT (Bearer token)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Registro Empresa",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/registro/", "host": ["{{base_url}}"], "path": ["api", "auth", "registro"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rut\": \"76.123.456-7\",\n  \"razon_social\": \"Mi Empresa SpA\",\n  \"nombre_comercial\": \"MiEmpresa\",\n  \"giro\": \"Venta al por menor\",\n  \"giro_codigo\": \"471100\",\n  \"region\": \"Metropolitana\",\n  \"email\": \"admin@miempresa.cl\",\n  \"password\": \"Admin123!\",\n  \"nombre_representante\": \"Juan Pérez\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login/", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@miempresa.cl\",\n  \"password\": \"Admin123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/refresh/", "host": ["{{base_url}}"], "path": ["api", "auth", "refresh"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"<refresh_token>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Perfil Usuario",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/auth/perfil/", "host": ["{{base_url}}"], "path": ["api", "auth", "perfil"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Inventario",
+      "description": "Microservicio de Inventario (ms-inventario) - proxies a través del BFF",
+      "item": [
+        {
+          "name": "Listar Productos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/inventario/", "host": ["{{base_url}}"], "path": ["api", "inventario"] }
+          }
+        },
+        {
+          "name": "Crear Producto (FÍSICO)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/inventario/", "host": ["{{base_url}}"], "path": ["api", "inventario"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Teclado Mecánico RGB\",\n  \"descripcion\": \"Teclado mecánico con retroiluminación RGB\",\n  \"tipo\": \"FISICO\",\n  \"precio\": \"49990\",\n  \"stock\": 20,\n  \"stock_minimo\": 5,\n  \"peso_kg\": 1.2,\n  \"bodega\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear Producto (DIGITAL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/inventario/", "host": ["{{base_url}}"], "path": ["api", "inventario"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Software ERP Premium\",\n  \"descripcion\": \"Licencia software ERP\",\n  \"tipo\": \"DIGITAL\",\n  \"precio\": \"199990\",\n  \"stock\": 999,\n  \"url_descarga\": \"https://ejemplo.com/descargar/erp\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear Producto (SERVICIO)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/inventario/", "host": ["{{base_url}}"], "path": ["api", "inventario"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Soporte Técnico Anual\",\n  \"descripcion\": \"Servicio de soporte técnico por 1 año\",\n  \"tipo\": \"SERVICIO\",\n  \"precio\": \"99000\",\n  \"stock\": 999,\n  \"duracion_dias\": 365\n}"
+            }
+          }
+        },
+        {
+          "name": "Detalle Producto",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/inventario/1/", "host": ["{{base_url}}"], "path": ["api", "inventario", "1"] }
+          }
+        },
+        {
+          "name": "Actualizar Producto (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/inventario/1/", "host": ["{{base_url}}"], "path": ["api", "inventario", "1"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": \"39990\",\n  \"stock\": 15\n}"
+            }
+          }
+        },
+        {
+          "name": "Ajustar Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/inventario/1/ajuste-stock/", "host": ["{{base_url}}"], "path": ["api", "inventario", "1", "ajuste-stock"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cantidad\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "Productos Bajo Stock",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/inventario/bajo-stock/", "host": ["{{base_url}}"], "path": ["api", "inventario", "bajo-stock"] }
+          }
+        },
+        {
+          "name": "Eliminar Producto",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/inventario/1/", "host": ["{{base_url}}"], "path": ["api", "inventario", "1"] }
+          }
+        },
+        {
+          "name": "Listar Bodegas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/bodegas/", "host": ["{{base_url}}"], "path": ["api", "bodegas"] }
+          }
+        },
+        {
+          "name": "Crear Bodega",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/bodegas/", "host": ["{{base_url}}"], "path": ["api", "bodegas"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bodega Central\",\n  \"direccion\": \"Av. Principal 123\",\n  \"capacidad\": 500\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Pedidos",
+      "item": [
+        {
+          "name": "Listar Pedidos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/pedidos/", "host": ["{{base_url}}"], "path": ["api", "pedidos"] }
+          }
+        },
+        {
+          "name": "Crear Pedido (Estándar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/pedidos/", "host": ["{{base_url}}"], "path": ["api", "pedidos"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente\": \"María González\",\n  \"email_cliente\": \"maria@mail.com\",\n  \"telefono_cliente\": \"+56912345678\",\n  \"direccion_entrega\": \"Av. Providencia 1234, Santiago\",\n  \"tipo_pedido\": \"estandar\",\n  \"tienda\": 1,\n  \"items\": [\n    {\n      \"producto_id\": 1,\n      \"nombre_producto\": \"Teclado Mecánico RGB\",\n      \"cantidad\": 2,\n      \"precio_unitario\": \"49990\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear Pedido (Express)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/pedidos/", "host": ["{{base_url}}"], "path": ["api", "pedidos"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente\": \"Ana López\",\n  \"email_cliente\": \"ana@mail.com\",\n  \"telefono_cliente\": \"+56987654321\",\n  \"direccion_entrega\": \"Av. Las Condes 5678, Santiago\",\n  \"tipo_pedido\": \"express\",\n  \"tienda\": 1,\n  \"items\": [\n    {\n      \"producto_id\": 2,\n      \"nombre_producto\": \"Software ERP Premium\",\n      \"cantidad\": 1,\n      \"precio_unitario\": \"199990\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Detalle Pedido",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/pedidos/1/", "host": ["{{base_url}}"], "path": ["api", "pedidos", "1"] }
+          }
+        },
+        {
+          "name": "Cambiar Estado Pedido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/pedidos/1/", "host": ["{{base_url}}"], "path": ["api", "pedidos", "1"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"PROCESANDO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar Tiendas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/tiendas/", "host": ["{{base_url}}"], "path": ["api", "tiendas"] }
+          }
+        },
+        {
+          "name": "Crear Tienda",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/tiendas/", "host": ["{{base_url}}"], "path": ["api", "tiendas"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Tienda Centro\",\n  \"direccion\": \"Av. Principal 456\",\n  \"ciudad\": \"Santiago\",\n  \"bodega_id\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Filtrar Pedidos por Estado",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/pedidos/estado/PENDIENTE/", "host": ["{{base_url}}"], "path": ["api", "pedidos", "estado", "PENDIENTE"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Envíos",
+      "item": [
+        {
+          "name": "Listar Envíos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/envios/", "host": ["{{base_url}}"], "path": ["api", "envios"] }
+          }
+        },
+        {
+          "name": "Crear Envío",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/envios/", "host": ["{{base_url}}"], "path": ["api", "envios"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedido_id\": 1,\n  \"tipo\": \"ESTANDAR\",\n  \"origen_nombre\": \"Bodega Central\",\n  \"origen_lat\": -33.4372,\n  \"origen_lon\": -70.6506,\n  \"destino_nombre\": \"Cliente\",\n  \"destino_lat\": -33.4321,\n  \"destino_lon\": -70.6000\n}"
+            }
+          }
+        },
+        {
+          "name": "Detalle Envío",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/envios/1/", "host": ["{{base_url}}"], "path": ["api", "envios", "1"] }
+          }
+        },
+        {
+          "name": "Cambiar Estado Envío",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/envios/1/estado/", "host": ["{{base_url}}"], "path": ["api", "envios", "1", "estado"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_RUTA\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar Posición GPS",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/envios/1/posicion/", "host": ["{{base_url}}"], "path": ["api", "envios", "1", "posicion"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": -33.4500,\n  \"lon\": -70.6200\n}"
+            }
+          }
+        },
+        {
+          "name": "Guardar Ruta (GeoJSON)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/envios/1/ruta/", "host": ["{{base_url}}"], "path": ["api", "envios", "1", "ruta"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ruta_geojson\": {\"type\": \"LineString\", \"coordinates\": [[-70.6506, -33.4372], [-70.6200, -33.4500], [-70.6000, -33.4321]]},\n  \"distancia_km\": 5.3,\n  \"duracion_min\": 15\n}"
+            }
+          }
+        },
+        {
+          "name": "Envíos en Curso",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/envios/en-curso/", "host": ["{{base_url}}"], "path": ["api", "envios", "en-curso"] }
+          }
+        },
+        {
+          "name": "Envío por ID de Pedido",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/envios/pedido/1/", "host": ["{{base_url}}"], "path": ["api", "envios", "pedido", "1"] }
+          }
+        },
+        {
+          "name": "Listar Conductores",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/conductores/", "host": ["{{base_url}}"], "path": ["api", "conductores"] }
+          }
+        },
+        {
+          "name": "Crear Conductor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/conductores/", "host": ["{{base_url}}"], "path": ["api", "conductores"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pedro Soto\",\n  \"telefono\": \"+56912345678\",\n  \"patente\": \"ABCD12\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Conductores Disponibles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/conductores/?disponibles=true", "host": ["{{base_url}}"], "path": ["api", "conductores"], "query": [{ "key": "disponibles", "value": "true" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Dashboard y Utilidades",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/dashboard/", "host": ["{{base_url}}"], "path": ["api", "dashboard"] }
+          }
+        },
+        {
+          "name": "Exportar Excel",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/exportar/excel/", "host": ["{{base_url}}"], "path": ["api", "exportar", "excel"] }
+          }
+        },
+        {
+          "name": "Listar Empleados",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/auth/empleados/", "host": ["{{base_url}}"], "path": ["api", "auth", "empleados"] }
+          }
+        }
+      ]
+    }
+  ]
+}

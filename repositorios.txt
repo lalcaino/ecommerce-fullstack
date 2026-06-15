@@ -1,0 +1,20 @@
+REPOSITORIOS DEL PROYECTO - SmartLogix
+=========================================
+
+Repositorio Principal (contiene todo el proyecto):
+https://github.com/lalcaino/ecommerce-fullstack
+
+  - Documentación general, informes, diagramas
+  - Frontend (React + Vite) en /frontend
+  - BFF - API Gateway (Django) en /bff
+  - Microservicio Inventario (Django) en /ms-inventario
+  - Microservicio Pedidos (Django) en /ms-pedidos
+  - Microservicio Envíos (Django) en /ms-envios
+
+Estructura:
+- Frontend:   /frontend/      -> React 18 + Vite + Mapbox GL JS
+- BFF:        /bff/           -> Django 4.2 + DRF (API Gateway + Auth JWT)
+- Inventario: /ms-inventario/ -> Django 4.2 + DRF (Productos, Bodegas)
+- Pedidos:    /ms-pedidos/    -> Django 4.2 + DRF (Pedidos, Tiendas)
+- Envíos:     /ms-envios/     -> Django 4.2 + DRF (Envíos, Conductores)
+- Persistencia: PostgreSQL 15 (schemas: public, inventario, pedidos, envios)

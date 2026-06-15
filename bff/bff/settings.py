@@ -24,8 +24,15 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
     'api',
 ]
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'SmartLogix API',
+    'DESCRIPTION': 'API Gateway para el sistema de gestión logística SmartLogix',
+    'VERSION': '1.0.0',
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

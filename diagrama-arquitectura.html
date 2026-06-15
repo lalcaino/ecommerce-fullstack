@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Diagrama Arquitectura SmartLogix</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body { background: white; display: flex; justify-content: center; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="mermaid">
+graph TB
+    subgraph Frontend["Frontend"]
+        FRONT["React 18 + Vite<br/>:3000"]
+    end
+
+    subgraph Gateway["API Gateway (BFF)"]
+        BFF["Django 4.2 + DRF<br/>:8000"]
+        JWT["JWT Auth"]
+        CB["Circuit Breaker"]
+        SYNC["Sync Pedidos/Envíos"]
+    end
+
+    subgraph Microservicios["Microservicios"]
+        INV["ms-inventario<br/>Django :8001"]
+        PED["ms-pedidos<br/>Django :8002"]
+        ENV["ms-envios<br/>Django :8003"]
+    end
+
+    subgraph Persistencia["Persistencia PostgreSQL 15"]
+        DB_PUB["schema: public<br/>Empresas, Usuarios"]
+        DB_INV["schema: inventario<br/>Productos, Bodegas"]
+        DB_PED["schema: pedidos<br/>Pedidos, Items, Tiendas"]
+        DB_ENV["schema: envios<br/>Envíos, Conductores,<br/>Paradas, EventosRuta"]
+    end
+
+    subgraph Externos["Servicios Externos"]
+        MAPBOX["Mapbox GL JS<br/>Geocoder + Directions"]
+    end
+
+    subgraph Simulados["Simulados"]
+        CLOUD["Cloudinary"]
+        TWILIO["Twilio WhatsApp"]
+    end
+
+    FRONT -->|"HTTP + JWT"| BFF
+    BFF --> JWT
+    BFF --> CB
+    BFF --> SYNC
+    BFF -->|REST| INV
+    BFF -->|REST| PED
+    BFF -->|REST| ENV
+    INV --> DB_INV
+    PED --> DB_PED
+    ENV --> DB_ENV
+    BFF --> DB_PUB
+    FRONT --> MAPBOX
+    BFF --> CLOUD
+    BFF --> TWILIO
+  </div>
+</body>
+</html>

@@ -2,3 +2,23 @@ node_modules/
 dist/
 build/
 .env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+.coverage
+coverage/
+htmlcov/
+
+# Duplicado
+/ecommerce-fullstack/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
