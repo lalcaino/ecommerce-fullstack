@@ -4,3 +4,9 @@ django-cors-headers==4.3.1
 requests==2.31.0
 python-decouple==3.8
 djangorestframework-simplejwt
+drf-spectacular
+cloudinary==1.41.0
+python-dotenv==1.0.0
+python-decouple==3.8
+psycopg2-binary==2.9.10
+openpyxl

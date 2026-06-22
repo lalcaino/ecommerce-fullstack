@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: smartlogix
+      POSTGRES_PASSWORD: smartlogix123
+      POSTGRES_DB: smartlogix
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartlogix"]
+      interval: 5s
+      retries: 5
+
+  ms-inventario:
+    image: lalcaino/smartlogix-inventario
+    environment:
+      SECRET_KEY: inventario-secret-key
+      DEBUG: "False"
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: smartlogix
+      DB_USER: smartlogix
+      DB_PASSWORD: smartlogix123
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_SCHEMA: inventario
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8001"
+
+  ms-pedidos:
+    image: lalcaino/smartlogix-pedidos
+    environment:
+      SECRET_KEY: pedidos-secret-key
+      DEBUG: "False"
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: smartlogix
+      DB_USER: smartlogix
+      DB_PASSWORD: smartlogix123
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_SCHEMA: pedidos
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8002"
+
+  ms-envios:
+    image: lalcaino/smartlogix-envios
+    environment:
+      SECRET_KEY: envios-secret-key
+      DEBUG: "False"
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: smartlogix
+      DB_USER: smartlogix
+      DB_PASSWORD: smartlogix123
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_SCHEMA: envios
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8003"
+
+  bff:
+    image: lalcaino/smartlogix-bff
+    environment:
+      SECRET_KEY: smartlogix-secret-key-produccion
+      DEBUG: "False"
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: smartlogix
+      DB_USER: smartlogix
+      DB_PASSWORD: smartlogix123
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_SCHEMA: public
+      MS_INVENTARIO_URL: http://ms-inventario:8001
+      MS_PEDIDOS_URL: http://ms-pedidos:8002
+      MS_ENVIOS_URL: http://ms-envios:8003
+      CLOUDINARY_CLOUD_NAME: dxhr9ubix
+      CLOUDINARY_API_KEY: "116321819438211"
+      CLOUDINARY_API_SECRET: NeIl2Bl9_PCNSkKT2gXmVDCmPbc
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ms-inventario:
+        condition: service_started
+      ms-pedidos:
+        condition: service_started
+      ms-envios:
+        condition: service_started
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    image: lalcaino/smartlogix-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - bff
+
+volumes:
+  postgres_data:

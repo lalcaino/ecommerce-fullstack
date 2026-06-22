@@ -9,7 +9,7 @@ export default function Contact() {
           <HeaderInfo>
             <h1 className="font40 extraBold">Contáctanos</h1>
             <p className="font13">
-              ¿Tenés preguntas sobre SmartLogix? Dejanos tus datos y te
+              ¿Tienes preguntas sobre SmartLogix? Dejanos tus datos y te
               <br />
               contactaremos para mostrarte cómo optimizamos tu logística.
             </p>
