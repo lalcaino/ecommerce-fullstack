@@ -56,8 +56,11 @@ class ProductoListView(APIView):
     def post(self, request):
         serializer = ProductoSerializer(data=request.data)
         if serializer.is_valid():
-            producto = ProductoRepository.create(serializer.validated_data)
-            return Response(ProductoSerializer(producto).data, status=status.HTTP_201_CREATED)
+            try:
+                producto = ProductoRepository.create(serializer.validated_data)
+                return Response(ProductoSerializer(producto).data, status=status.HTTP_201_CREATED)
+            except ValueError as e:
+                return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -78,8 +81,11 @@ class ProductoDetailView(APIView):
         if err: return err
         serializer = ProductoSerializer(producto, data=request.data, partial=False)
         if serializer.is_valid():
-            updated = ProductoRepository.update(pk, serializer.validated_data)
-            return Response(ProductoSerializer(updated).data)
+            try:
+                updated = ProductoRepository.update(pk, serializer.validated_data)
+                return Response(ProductoSerializer(updated).data)
+            except ValueError as e:
+                return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, pk):
@@ -87,8 +93,11 @@ class ProductoDetailView(APIView):
         if err: return err
         serializer = ProductoSerializer(producto, data=request.data, partial=True)
         if serializer.is_valid():
-            updated = ProductoRepository.update(pk, serializer.validated_data)
-            return Response(ProductoSerializer(updated).data)
+            try:
+                updated = ProductoRepository.update(pk, serializer.validated_data)
+                return Response(ProductoSerializer(updated).data)
+            except ValueError as e:
+                return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):

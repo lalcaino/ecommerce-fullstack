@@ -2,8 +2,9 @@
  * Inventario.jsx - CRUD de productos (rediseñado)
  * Mantiene useInventario hook y Factory Method pattern original.
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useInventario } from '../hooks/useInventario'
+import { BodegasRepository } from '../services/api'
 import { FiImage, FiEdit2, FiTrash2 } from 'react-icons/fi'
 
 const C = {
@@ -18,7 +19,7 @@ const C = {
 function ProductoFactory(tipo) {
   const base = { nombre: '', descripcion: '', precio: '', stock: 0 }
   const tipos = {
-    FISICO:   { ...base, tipo: 'FISICO',   peso_kg: 0 },
+    FISICO:   { ...base, tipo: 'FISICO',   peso_kg: 0, volumen_cm3: 0, bodega: '' },
     DIGITAL:  { ...base, tipo: 'DIGITAL',  url_descarga: '' },
     SERVICIO: { ...base, tipo: 'SERVICIO', duracion_dias: 0 },
   }
@@ -65,7 +66,7 @@ function InputField({ label, name, value, onChange, type = 'text' }) {
   )
 }
 
-function NuevoItemForm({ onSubmit, onCancel }) {
+function NuevoItemForm({ bodegas, onSubmit, onCancel }) {
   const [tipo, setTipo] = useState('FISICO')
   const [form, setForm] = useState(ProductoFactory('FISICO'))
   const [imagenFile, setImagenFile] = useState(null)
@@ -76,7 +77,17 @@ function NuevoItemForm({ onSubmit, onCancel }) {
   }
   const change = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
 
-  const fieldLabel = { nombre: 'Nombre', descripcion: 'Descripción', precio: 'Precio ($)', stock: 'Stock', peso_kg: 'Peso (kg)', url_descarga: 'URL descarga', duracion_dias: 'Duración (días)' }
+  const bodegaSeleccionada = bodegas.find(b => b.id === parseInt(form.bodega))
+  const volumenProducto = parseFloat(form.volumen_cm3) || 0
+  const stockCalc = parseInt(form.stock) || 0
+  const volumenTotal = volumenProducto * stockCalc
+  const excedeVolumen = bodegaSeleccionada && bodegaSeleccionada.capacidad_volumen_cm3 > 0
+    && (bodegaSeleccionada.volumen_ocupado_cm3 || 0) + volumenTotal > bodegaSeleccionada.capacidad_volumen_cm3
+  const disponible = bodegaSeleccionada
+    ? (bodegaSeleccionada.capacidad_volumen_cm3 || 0) - (bodegaSeleccionada.volumen_ocupado_cm3 || 0)
+    : 0
+
+  const fieldLabel = { nombre: 'Nombre', descripcion: 'Descripción', precio: 'Precio ($)', stock: 'Stock', peso_kg: 'Peso (kg)', volumen_cm3: 'Vol. (cm³)', url_descarga: 'URL descarga', duracion_dias: 'Duración (días)' }
 
   return (
     <div style={{ background: C.white, borderRadius: 14, border: `1px solid ${C.gray200}`, padding: 24, marginBottom: 20 }}>
@@ -90,11 +101,37 @@ function NuevoItemForm({ onSubmit, onCancel }) {
         </select>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px,1fr))', gap: 12 }}>
-        {Object.keys(form).filter(k => k !== 'tipo').map(k => (
+        {Object.keys(form).filter(k => k !== 'tipo' && k !== 'bodega').map(k => (
           <InputField key={k} label={fieldLabel[k] || k} name={k} value={form[k]} onChange={change}
-            type={['precio','stock','peso_kg','duracion_dias'].includes(k) ? 'number' : 'text'}
+            type={['precio','stock','peso_kg','duracion_dias','volumen_cm3'].includes(k) ? 'number' : 'text'}
           />
         ))}
+        {tipo === 'FISICO' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>Bodega</label>
+            <select name="bodega" value={form.bodega} onChange={change}
+              style={{ border: `1.5px solid ${C.gray200}`, borderRadius: 8, padding: '8px 12px', fontSize: 14, fontFamily: 'inherit', outline: 'none', cursor: 'pointer', background: C.white }}>
+              <option value="">Sin bodega</option>
+              {bodegas.map(b => (
+                <option key={b.id} value={b.id}>
+                   {b.nombre} — {b.volumen_ocupado_cm3 || 0}/{b.capacidad_volumen_cm3 || 0} cm³
+                </option>
+              ))}
+            </select>
+            {bodegaSeleccionada && (
+              <div style={{ marginTop: 4 }}>
+                <span style={{ fontSize: 11, color: C.gray400 }}>
+                  Disponible: {(disponible).toLocaleString('es-CL')} cm³
+                </span>
+                {volumenTotal > 0 && (
+                  <span style={{ fontSize: 11, color: excedeVolumen ? C.error : C.success, fontWeight: 700, marginLeft: 6 }}>
+                    {excedeVolumen ? '⚠ Excede capacidad!' : `✓ Ocupará ${volumenTotal.toLocaleString('es-CL')} cm³`}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>Imagen (opcional)</label>
           <input type="file" accept="image/*" onChange={e => setImagenFile(e.target.files[0])}
@@ -102,19 +139,26 @@ function NuevoItemForm({ onSubmit, onCancel }) {
           />
         </div>
       </div>
+      {excedeVolumen && (
+        <div style={{ background: C.error + '12', border: `1px solid ${C.error}30`, borderRadius: 8, padding: '8px 12px', marginTop: 12, color: C.error, fontSize: 13, fontWeight: 600 }}>
+           El volumen total ({volumenTotal.toLocaleString('es-CL')} cm³) excede la capacidad disponible de la bodega ({(disponible).toLocaleString('es-CL')} cm³)
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-        <Btn variant="success" onClick={() => onSubmit({ ...form, tipo }, imagenFile)}>✓ Crear Producto</Btn>
+        <Btn variant="success" onClick={() => onSubmit({ ...form, tipo, bodega: form.bodega ? parseInt(form.bodega) : null }, imagenFile)}>✓ Crear Producto</Btn>
         <Btn variant="secondary" onClick={onCancel}>Cancelar</Btn>
       </div>
     </div>
   )
 }
 
-function ItemRow({ item, onUpdate, onDelete, onUploadImage }) {
+function ItemRow({ item, bodegas, onUpdate, onDelete, onUploadImage }) {
   const [editMode, setEditMode] = useState(false)
   const [form, setForm] = useState({ stock: item.stock, precio: item.precio })
   const [uploading, setUploading] = useState(false)
   const low = item.stock <= item.stock_minimo
+
+  const bodegaNombre = item.bodega_nombre || (bodegas.find(b => b.id === item.bodega)?.nombre) || ''
 
   const save = async () => {
     const res = await onUpdate(item.id, form)
@@ -161,6 +205,9 @@ function ItemRow({ item, onUpdate, onDelete, onUploadImage }) {
           : <span style={{ color: C.gray400, fontSize: 12 }}>—</span>
         }
       </td>
+      <td style={{ padding: '12px 16px', color: C.gray500, fontSize: 13 }}>
+        {bodegaNombre || <span style={{ color: C.gray300 }}>—</span>}
+      </td>
       <td style={{ padding: '12px 16px' }}>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {editMode ? (
@@ -190,6 +237,11 @@ export default function Inventario() {
   const { items, loading, error, createItem, updateItem, deleteItem, uploadImage } = useInventario()
   const [showForm, setShowForm] = useState(false)
   const [search,   setSearch]   = useState('')
+  const [bodegas, setBodegas] = useState([])
+
+  useEffect(() => {
+    BodegasRepository.getAll().then(setBodegas).catch(() => {})
+  }, [])
 
   const filtered = items.filter(i =>
     i.nombre?.toLowerCase().includes(search.toLowerCase())
@@ -221,7 +273,7 @@ export default function Inventario() {
         )}
 
         {showForm && (
-          <NuevoItemForm
+          <NuevoItemForm bodegas={bodegas}
             onSubmit={async (data, file) => { const res = await createItem(data); if (res.ok) { if (file) await uploadImage(res.id, file); setShowForm(false) } }}
             onCancel={() => setShowForm(false)}
           />
@@ -241,14 +293,14 @@ export default function Inventario() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: C.gray100, borderBottom: `1px solid ${C.gray200}` }}>
-                {['ID','Nombre','Tipo','Stock','Precio','Estado','Imagen','Acciones'].map(h => (
+                {['ID','Nombre','Tipo','Stock','Precio','Estado','Imagen','Bodega','Acciones'].map(h => (
                   <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: C.gray500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.5px' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map(item => (
-                <ItemRow key={item.id} item={item} onUpdate={updateItem} onDelete={deleteItem} onUploadImage={uploadImage} />
+                <ItemRow key={item.id} item={item} bodegas={bodegas} onUpdate={updateItem} onDelete={deleteItem} onUploadImage={uploadImage} />
               ))}
             </tbody>
           </table>
