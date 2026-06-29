@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTiendas } from '../hooks/useTiendas'
 import { BodegasRepository } from '../services/api'
+import GeocoderInput from './GeocoderInput'
 
 const C = {
   brand: '#408A71', brandLight: '#e8f5f0',
@@ -91,7 +92,25 @@ function NuevaTiendaForm({ inicial, bodegas, onSubmit, onCancel }) {
       ? { nombre: inicial.nombre, direccion: inicial.direccion, ciudad: inicial.ciudad, bodega_id: inicial.bodega_id || '' }
       : { nombre: '', direccion: '', ciudad: '', bodega_id: '' }
   )
+  const [direccionTexto, setDireccionTexto] = useState(inicial?.direccion || '')
   const change = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
+
+  const handleDireccionSelect = ({ nombre }) => {
+    setDireccionTexto(nombre)
+    setForm(p => ({ ...p, direccion: nombre }))
+  }
+
+  const handleDireccionChange = (val) => {
+    setDireccionTexto(val)
+    setForm(p => ({ ...p, direccion: val }))
+  }
+
+  const labelStyle = { fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }
+  const inputStyle = {
+    border: `1.5px solid ${C.gray200}`, borderRadius: 8,
+    padding: '8px 12px', fontSize: 14, fontFamily: 'inherit',
+    color: C.gray800, outline: 'none', width: '100%', boxSizing: 'border-box',
+  }
 
   return (
     <div style={{
@@ -102,31 +121,27 @@ function NuevaTiendaForm({ inicial, bodegas, onSubmit, onCancel }) {
         {inicial ? 'Editar Tienda' : 'Nueva Tienda'}
       </h3>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        {[
-          { name: 'nombre',    label: 'Nombre'    },
-          { name: 'direccion', label: 'Dirección' },
-          { name: 'ciudad',    label: 'Ciudad'    },
-        ].map(({ name, label }) => (
-          <div key={name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-              {label}
-            </label>
-            <input
-              name={name} value={form[name]} onChange={change}
-              style={{
-                border: `1.5px solid ${C.gray200}`, borderRadius: 8,
-                padding: '8px 12px', fontSize: 14, fontFamily: 'inherit',
-                color: C.gray800, outline: 'none',
-              }}
-            />
-          </div>
-        ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={labelStyle}>Nombre</label>
+          <input name="nombre" value={form.nombre} onChange={change} style={inputStyle} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={labelStyle}>Ciudad</label>
+          <input name="ciudad" value={form.ciudad} onChange={change} style={inputStyle} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: 'span 2' }}>
+          <label style={labelStyle}>Dirección</label>
+          <GeocoderInput
+            value={direccionTexto}
+            onChange={handleDireccionChange}
+            onSelect={handleDireccionSelect}
+            placeholder="Ej: Av. Providencia 1234, Santiago"
+          />
+        </div>
 
         {/* Desplegable de bodegas */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Bodega asignada
-          </label>
+          <label style={labelStyle}>Bodega asignada</label>
           <select
             name="bodega_id" value={form.bodega_id} onChange={change}
             style={{

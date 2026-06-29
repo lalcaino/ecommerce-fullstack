@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { usePedidos } from '../hooks/usePedidos'
-import { TiendasRepository, InventarioRepository } from '../services/api'
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''
+import { TiendasRepository, InventarioRepository, BodegasRepository } from '../services/api'
+import GeocoderInput from './GeocoderInput'
 
 const C = {
   brand: '#408A71', brandLight: '#e8f5f0',
@@ -73,107 +72,7 @@ function Toast({ mensaje, icono = '', color = C.success, onClose }) {
   )
 }
 
-// ─── Geocoder input reutilizable ──────────────────────────────────────────────
-function GeocoderInput({ value, onChange, onSelect, placeholder }) {
-  const [query,       setQuery]       = useState(value || '')
-  const [sugerencias, setSugerencias] = useState([])
-  const [buscando,    setBuscando]    = useState(false)
-  const [mostrar,     setMostrar]     = useState(false)
-  const debounceRef = useRef(null)
-  const wrapperRef  = useRef(null)
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setMostrar(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  const handleChange = (e) => {
-    const val = e.target.value
-    setQuery(val)
-    onChange(val)
-    setSugerencias([])
-    setMostrar(false)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (val.length < 3 || !MAPBOX_TOKEN) return
-    debounceRef.current = setTimeout(async () => {
-      setBuscando(true)
-      try {
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json` +
-          `?access_token=${MAPBOX_TOKEN}&country=cl&language=es&limit=5&types=address,place,locality`
-        const res  = await fetch(url)
-        const data = await res.json()
-        setSugerencias(data.features || [])
-        setMostrar(true)
-      } catch { setSugerencias([]) }
-      finally  { setBuscando(false) }
-    }, 380)
-  }
-
-  const handleSelect = (feature) => {
-    const [lon, lat] = feature.center
-    const nombre     = feature.place_name
-    setQuery(nombre)
-    setSugerencias([])
-    setMostrar(false)
-    onSelect({ nombre, lat, lon })
-  }
-
-  const listo = value && value === query
-
-  return (
-    <div ref={wrapperRef} style={{ position: 'relative' }}>
-      <div style={{ position: 'relative' }}>
-        <input
-          type="text" value={query} onChange={handleChange}
-          onFocus={() => sugerencias.length > 0 && setMostrar(true)}
-          placeholder={placeholder || 'Escribe una dirección...'}
-          style={{
-            width: '100%', boxSizing: 'border-box',
-            border: `1.5px solid ${listo ? C.success : C.gray200}`,
-            borderRadius: 8, padding: '8px 36px 8px 10px',
-            fontSize: 13, fontFamily: 'inherit', outline: 'none', color: C.gray800,
-          }}
-        />
-        <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)' }}>
-          {buscando ? (
-            <div style={{ width: 13, height: 13, border: `2px solid ${C.gray200}`, borderTopColor: C.brand, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          ) : listo ? (
-            <span style={{ color: C.success, fontSize: 13 }}>✓</span>
-          ) : (
-            <span style={{ color: C.gray400, fontSize: 13 }}>📍</span>
-          )}
-        </div>
-      </div>
-
-      {!MAPBOX_TOKEN && (
-        <p style={{ fontSize: 11, color: C.gray400, margin: '3px 0 0' }}>
-          Configura VITE_MAPBOX_TOKEN para autocompletar direcciones
-        </p>
-      )}
-
-      {mostrar && sugerencias.length > 0 && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-          zIndex: 9999, background: C.white, border: `1px solid ${C.gray200}`,
-          borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden',
-        }}>
-          {sugerencias.map((f) => (
-            <div key={f.id} className="geocoder-sug"
-              onMouseDown={() => handleSelect(f)}
-              style={{ padding: '10px 14px', cursor: 'pointer', fontSize: 13, borderBottom: `1px solid ${C.gray100}` }}
-            >
-              <div style={{ fontWeight: 600, color: C.gray800, marginBottom: 2 }}>📍 {f.text}</div>
-              <div style={{ fontSize: 11, color: C.gray400 }}>{f.place_name}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ─── Badge y Selector estado ──────────────────────────────────────────────────
 function EstadoBadge({ estado }) {
@@ -346,11 +245,11 @@ function SelectorProductos({ productos, items, onChange }) {
 }
 
 // ─── Formulario nuevo pedido ──────────────────────────────────────────────────
-function NuevoPedidoForm({ tiendas, productos, onSubmit, onCancel }) {
+function NuevoPedidoForm({ tiendas, bodegas, productos, onSubmit, onCancel }) {
   const [form, setForm] = useState({
     cliente: '', email_cliente: '', telefono_cliente: '',
     direccion_entrega: '', latitud_entrega: '', longitud_entrega: '',
-    tienda: '', notas: '',
+    tienda: '', origen_despacho: 'tienda', bodega_origen_id: '', notas: '',
   })
   const [items,         setItems]         = useState([])
   const [direccionTexto, setDireccionTexto] = useState('')
@@ -406,15 +305,50 @@ function NuevoPedidoForm({ tiendas, productos, onSubmit, onCancel }) {
           />
         </div>
 
-        {/* Tienda */}
+        {/* Origen de despacho */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={labelStyle}>Tienda</label>
-          <select name="tienda" value={form.tienda} onChange={change}
-            style={{ ...inputStyle, cursor: 'pointer' }}>
-            <option value="">Sin tienda asignada</option>
-            {tiendas.map(t => <option key={t.id} value={t.id}>🏪 {t.nombre} — {t.ciudad}</option>)}
-          </select>
+          <label style={labelStyle}>Origen despacho</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {['tienda', 'bodega'].map(o => (
+              <label key={o} style={{
+                flex: 1, display: 'flex', alignItems: 'center', gap: 6,
+                border: `1.5px solid ${form.origen_despacho === o ? C.brand : C.gray200}`,
+                borderRadius: 8, padding: '8px 12px', cursor: 'pointer',
+                background: form.origen_despacho === o ? C.brandLight : C.white,
+                fontWeight: 600, fontSize: 13, color: form.origen_despacho === o ? C.brand : C.gray700,
+              }}>
+                <input type="radio" name="origen_despacho" value={o}
+                  checked={form.origen_despacho === o}
+                  onChange={change} style={{ accentColor: C.brand }} />
+                {o === 'tienda' ? '🏪 Tienda' : '🏭 Bodega'}
+              </label>
+            ))}
+          </div>
         </div>
+
+        {/* Tienda (si origen = tienda) */}
+        {form.origen_despacho === 'tienda' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={labelStyle}>Tienda</label>
+            <select name="tienda" value={form.tienda} onChange={change}
+              style={{ ...inputStyle, cursor: 'pointer' }}>
+              <option value="">Seleccionar tienda</option>
+              {tiendas.map(t => <option key={t.id} value={t.id}>🏪 {t.nombre} — {t.ciudad}</option>)}
+            </select>
+          </div>
+        )}
+
+        {/* Bodega (si origen = bodega) */}
+        {form.origen_despacho === 'bodega' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={labelStyle}>Bodega origen</label>
+            <select name="bodega_origen_id" value={form.bodega_origen_id} onChange={change}
+              style={{ ...inputStyle, cursor: 'pointer' }}>
+              <option value="">Seleccionar bodega</option>
+              {bodegas.map(b => <option key={b.id} value={b.id}>🏭 {b.nombre} — {b.direccion}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Productos */}
@@ -437,6 +371,7 @@ function NuevoPedidoForm({ tiendas, productos, onSubmit, onCancel }) {
               latitud_entrega: form.latitud_entrega ? parseFloat(form.latitud_entrega) : null,
               longitud_entrega: form.longitud_entrega ? parseFloat(form.longitud_entrega) : null,
               tienda: form.tienda ? parseInt(form.tienda) : null,
+              bodega_origen_id: form.bodega_origen_id ? parseInt(form.bodega_origen_id) : null,
               items: items.map(i => ({ producto_id: i.producto_id, nombre_producto: i.nombre_producto, cantidad: i.cantidad, precio_unitario: i.precio_unitario })),
             })}
           style={{ background: C.success + '18', color: C.success, border: `1px solid ${C.success}30`, borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -496,6 +431,7 @@ export default function Pedidos() {
   const { pedidos, loading, error, createPedido, cambiarEstado } = usePedidos({ onEnvioCreado: handleEnvioCreado })
 
   const [tiendas,   setTiendas]   = useState([])
+  const [bodegas,   setBodegas]   = useState([])
   const [productos, setProductos] = useState([])
   const [showForm,  setShowForm]  = useState(false)
   const [filtro,    setFiltro]    = useState('TODOS')
@@ -503,6 +439,7 @@ export default function Pedidos() {
 
   useEffect(() => {
     TiendasRepository.getAll().then(setTiendas).catch(() => setTiendas([]))
+    BodegasRepository.getAll().then(setBodegas).catch(() => setBodegas([]))
     InventarioRepository.getAll().then(setProductos).catch(() => setProductos([]))
   }, [])
 
@@ -556,7 +493,7 @@ export default function Pedidos() {
 
         {showForm && (
           <NuevoPedidoForm
-            tiendas={tiendas} productos={productos}
+            tiendas={tiendas} bodegas={bodegas} productos={productos}
             onSubmit={async (data) => { const res = await createPedido(data); if (res.ok) setShowForm(false) }}
             onCancel={() => setShowForm(false)}
           />

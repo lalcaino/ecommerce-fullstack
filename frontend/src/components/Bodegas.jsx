@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useBodegas } from '../hooks/useBodegas'
+import GeocoderInput from './GeocoderInput'
 
 const C = {
   brand: '#408A71', brandLight: '#e8f5f0',
@@ -61,6 +62,9 @@ function Btn({ onClick, children, variant = 'primary', small = false }) {
 }
 
 function BodegaCard({ bodega, onDelete, onEdit }) {
+  const coords = bodega.latitud && bodega.longitud
+    ? `${parseFloat(bodega.latitud).toFixed(4)}, ${parseFloat(bodega.longitud).toFixed(4)}`
+    : null
   return (
     <div className="bodega-card" style={{
       background: C.white, borderRadius: 16,
@@ -76,6 +80,20 @@ function BodegaCard({ bodega, onDelete, onEdit }) {
         <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>
            Capacidad: <strong style={{ color: C.brand }}>{bodega.capacidad}</strong> unidades
         </p>
+        <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>
+           Volumen: <strong style={{ color: C.info }}>{(bodega.capacidad_volumen_cm3 || 0).toLocaleString('es-CL')}</strong> cm³
+        </p>
+        <p style={{ margin: '2px 0', fontSize: 13, color: C.gray500 }}>
+           Ocupado: <strong>{(bodega.volumen_ocupado_cm3 || 0).toLocaleString('es-CL')}</strong> cm³
+           {bodega.capacidad_volumen_cm3 > 0 && (
+             <span style={{ color: C.gray400 }}> ({bodega.porcentaje_ocupado || Math.round((bodega.volumen_ocupado_cm3 || 0) / bodega.capacidad_volumen_cm3 * 100)}%)</span>
+           )}
+        </p>
+        {coords && (
+          <p style={{ margin: '2px 0', fontSize: 12, color: C.gray400 }}>
+           {coords}
+          </p>
+        )}
         <p style={{ margin: '6px 0 0', fontSize: 12, color: C.gray400 }}>
           Productos almacenados: <strong>{bodega.total_productos ?? 0}</strong>
         </p>
@@ -89,8 +107,31 @@ function BodegaCard({ bodega, onDelete, onEdit }) {
 }
 
 function NuevaBodegaForm({ inicial, onSubmit, onCancel }) {
-  const [form, setForm] = useState(inicial || { nombre: '', direccion: '', capacidad: 0 })
+  const [form, setForm] = useState(inicial
+    ? { nombre: inicial.nombre, direccion: inicial.direccion || '', capacidad: inicial.capacidad || 0,
+        capacidad_volumen_cm3: inicial.capacidad_volumen_cm3 || 0,
+        latitud: inicial.latitud || '', longitud: inicial.longitud || '' }
+    : { nombre: '', direccion: '', capacidad: 0, capacidad_volumen_cm3: 0, latitud: '', longitud: '' }
+  )
+  const [direccionTexto, setDireccionTexto] = useState(inicial?.direccion || '')
   const change = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
+
+  const handleDireccionSelect = ({ nombre, lat, lon }) => {
+    setDireccionTexto(nombre)
+    setForm(p => ({ ...p, direccion: nombre, latitud: lat, longitud: lon }))
+  }
+
+  const handleDireccionChange = (val) => {
+    setDireccionTexto(val)
+    setForm(p => ({ ...p, direccion: val }))
+  }
+
+  const labelStyle = { fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }
+  const inputStyle = {
+    border: `1.5px solid ${C.gray200}`, borderRadius: 8,
+    padding: '8px 12px', fontSize: 14, fontFamily: 'inherit',
+    color: C.gray800, outline: 'none', width: '100%', boxSizing: 'border-box',
+  }
 
   return (
     <div style={{
@@ -101,28 +142,44 @@ function NuevaBodegaForm({ inicial, onSubmit, onCancel }) {
         {inicial ? 'Editar Bodega' : 'Nueva Bodega'}
       </h3>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        {[
-          { name: 'nombre',    label: 'Nombre',    type: 'text'   },
-          { name: 'direccion', label: 'Dirección', type: 'text'   },
-          { name: 'capacidad', label: 'Capacidad', type: 'number' },
-        ].map(({ name, label, type }) => (
-          <div key={name} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: C.gray500, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-              {label}
-            </label>
-            <input
-              type={type} name={name} value={form[name]} onChange={change}
-              style={{
-                border: `1.5px solid ${C.gray200}`, borderRadius: 8,
-                padding: '8px 12px', fontSize: 14, fontFamily: 'inherit',
-                color: C.gray800, outline: 'none',
-              }}
-            />
-          </div>
-        ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={labelStyle}>Nombre</label>
+          <input name="nombre" value={form.nombre} onChange={change} style={inputStyle} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={labelStyle}>Capacidad (unidades)</label>
+          <input type="number" name="capacidad" value={form.capacidad} onChange={change} style={inputStyle} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={labelStyle}>Capacidad volumen (cm³)</label>
+          <input type="number" name="capacidad_volumen_cm3" value={form.capacidad_volumen_cm3} onChange={change} style={inputStyle} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={labelStyle}>Latitud</label>
+          <input name="latitud" value={form.latitud} onChange={change} placeholder="Ej: -33.4567" style={inputStyle} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={labelStyle}>Longitud</label>
+          <input name="longitud" value={form.longitud} onChange={change} placeholder="Ej: -70.6543" style={inputStyle} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: 'span 2' }}>
+          <label style={labelStyle}>Dirección</label>
+          <GeocoderInput
+            value={direccionTexto}
+            onChange={handleDireccionChange}
+            onSelect={handleDireccionSelect}
+            placeholder="Ej: Av. Providencia 1234, Santiago"
+          />
+        </div>
       </div>
       <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-        <Btn variant="success" onClick={() => onSubmit(form)}>✓ {inicial ? 'Guardar' : 'Crear'}</Btn>
+        <Btn variant="success" onClick={() => onSubmit({
+          ...form,
+          latitud: form.latitud ? parseFloat(form.latitud) : null,
+          longitud: form.longitud ? parseFloat(form.longitud) : null,
+          capacidad: parseInt(form.capacidad) || 0,
+          capacidad_volumen_cm3: parseFloat(form.capacidad_volumen_cm3) || 0,
+        })}>✓ {inicial ? 'Guardar' : 'Crear'}</Btn>
         <Btn variant="secondary" onClick={onCancel}>Cancelar</Btn>
       </div>
     </div>
