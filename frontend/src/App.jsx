@@ -10,6 +10,7 @@ import Tiendas      from './components/Tiendas'
 import Sidebar      from './components/Sidebar'
 import Envios       from './components/Envios'
 import Empleados    from './components/Empleados'
+import SuperAdmin   from './components/SuperAdmin'
 import Landing      from './screens/Landing'
 import Registro     from './screens/Registro'
 import Login        from './screens/Login'
@@ -26,6 +27,7 @@ function RutaProtegida({ children, soloAdmin = false }) {
   if (soloAdmin && usuario?.rol === 'repartidor') {
     return <Navigate to="/repartidor" replace />
   }
+  // superadmin puede acceder a todo
   return children
 }
 
@@ -42,6 +44,7 @@ function AppLayout() {
           <Route path="/tiendas"    element={<Tiendas />}    />
           <Route path="/envios"     element={<Envios />}     />
           <Route path="/empleados"  element={<Empleados />}  />
+          <Route path="/superadmin" element={<SuperAdmin />} />
         </Routes>
       </main>
     </div>

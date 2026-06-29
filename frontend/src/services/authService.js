@@ -16,6 +16,7 @@ export async function loginRequest({ email, password }) {
 export async function registroRequest({
   nombre, nombre_representante, email, password,
   rut, razonSocial, nombre_comercial, giro, giro_codigo, region,
+  acepto_terminos = false,
 }) {
   const res = await fetch(`${BASE}/registro/`, {
     method: 'POST',
@@ -31,6 +32,7 @@ export async function registroRequest({
       giro,
       giro_codigo,
       region,
+      acepto_terminos,
     }),
   })
   const data = await res.json()

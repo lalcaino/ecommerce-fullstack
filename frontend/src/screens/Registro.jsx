@@ -182,6 +182,7 @@ export default function Registro() {
     handleGiroSelect, handleGiroChange,
     canAdvance,
     form, errors, loading, changeForm, submit,
+    aceptoTerminos, setAceptoTerminos,
   } = useRegistroForm()
 
   return (
@@ -415,11 +416,30 @@ export default function Registro() {
                     onChange={changeForm} placeholder="••••••••" style={inputStyle(errors.confirmPassword)} />
                 </Field>
 
-                <p style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.6, margin: '4px 0 0' }}>
-                  Al registrarte aceptas los{' '}
-                  <a href="#" style={{ color: C.brand, fontWeight: 600 }}>Términos de Servicio</a>{' '}y la{' '}
-                  <a href="#" style={{ color: C.brand, fontWeight: 600 }}>Política de Privacidad</a>.
-                </p>
+                <div style={{
+                  background: '#f9fafb', border: `1.5px solid ${errors.terminos ? '#ef4444' : '#e5e7eb'}`,
+                  borderRadius: 10, padding: '14px 16px', marginTop: 8,
+                }}>
+                  <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: C.gray700, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                    Términos Éticos
+                  </p>
+                  <div style={{ fontSize: 12, color: C.gray500, lineHeight: 1.7, maxHeight: 120, overflowY: 'auto', marginBottom: 10, padding: '0 4px' }}>
+                    <p style={{ margin: '0 0 6px' }}><strong>1.</strong> No comercializaré productos ilícitos, prohibidos por ley, o que promuevan violencia, discriminación o actividades ilegales.</p>
+                    <p style={{ margin: '0 0 6px' }}><strong>2.</strong> Cumpliré con todas las leyes y regulaciones aplicables a mi actividad comercial.</p>
+                    <p style={{ margin: '0 0 6px' }}><strong>3.</strong> No utilizaré la plataforma para actividades fraudulentas o engañosas.</p>
+                    <p style={{ margin: '0 0 6px' }}><strong>4.</strong> Respetaré los derechos de propiedad intelectual de terceros.</p>
+                    <p style={{ margin: 0 }}><strong>5.</strong> SmartLogix se reserva el derecho de suspender cuentas que violen estos términos.</p>
+                  </div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: C.gray700 }}>
+                    <input type="checkbox" checked={aceptoTerminos}
+                      onChange={e => setAceptoTerminos(e.target.checked)}
+                      style={{ accentColor: C.brand, width: 16, height: 16 }} />
+                    Acepto los términos éticos y condiciones de uso
+                  </label>
+                  {errors.terminos && (
+                    <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 600, marginTop: 4, display: 'block' }}>⚠ {errors.terminos}</span>
+                  )}
+                </div>
 
                 <button onClick={submit} disabled={loading} style={{
                   background: loading ? '#e5e7eb' : C.brand,

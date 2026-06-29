@@ -46,6 +46,7 @@ export function useRegistroForm() {
     password:             '',
     confirmPassword:      '',
   })
+  const [aceptoTerminos, setAceptoTerminos] = useState(false)
   const [errors,  setErrors]  = useState({})
   const [loading, setLoading] = useState(false)
 
@@ -122,6 +123,7 @@ export function useRegistroForm() {
     if (!form.password)                    e.password             = 'Ingresa una contraseña'
     if (form.password.length < 8)          e.password             = 'Mínimo 8 caracteres'
     if (form.password !== form.confirmPassword) e.confirmPassword  = 'Las contraseñas no coinciden'
+    if (!aceptoTerminos)                   e.terminos             = 'Debes aceptar los términos éticos'
     return e
   }
 
@@ -142,6 +144,7 @@ export function useRegistroForm() {
         giro:                 giro.descripcion,
         giro_codigo:          giro.codigo,
         region,
+        acepto_terminos:      aceptoTerminos,
       })
       navigate('/dashboard')
     } catch (err) {
@@ -158,5 +161,6 @@ export function useRegistroForm() {
     handleGiroSelect, handleGiroChange,
     canAdvance,
     form, errors, loading, changeForm, submit,
+    aceptoTerminos, setAceptoTerminos,
   }
 }

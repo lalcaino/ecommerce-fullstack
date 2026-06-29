@@ -4,13 +4,14 @@ import { C } from '../style/theme'
 import { getUsuario, logout } from '../services/authService'
 
 const links = [
-  { to: '/dashboard',  icon: '📊', label: 'Dashboard'  },
-  { to: '/inventario', icon: '📋', label: 'Inventario'  },
-  { to: '/pedidos',    icon: '📦', label: 'Pedidos'     },
-  { to: '/bodegas',    icon: '🏭', label: 'Bodegas'     },
-  { to: '/tiendas',    icon: '🏪', label: 'Tiendas'     },
-  { to: '/envios',     icon: '🚚', label: 'Envíos'      },
-  { to: '/empleados',  icon: '👷', label: 'Empleados'   },
+  { to: '/dashboard',  icon: '📊', label: 'Dashboard',       roles: ['admin', 'superadmin'] },
+  { to: '/inventario', icon: '📋', label: 'Inventario',      roles: ['admin', 'superadmin'] },
+  { to: '/pedidos',    icon: '📦', label: 'Pedidos',         roles: ['admin', 'superadmin'] },
+  { to: '/bodegas',    icon: '🏭', label: 'Bodegas',         roles: ['admin', 'superadmin'] },
+  { to: '/tiendas',    icon: '🏪', label: 'Tiendas',         roles: ['admin', 'superadmin'] },
+  { to: '/envios',     icon: '🚚', label: 'Envíos',          roles: ['admin', 'superadmin'] },
+  { to: '/empleados',  icon: '👷', label: 'Empleados',       roles: ['admin', 'superadmin'] },
+  { to: '/superadmin', icon: '⚙️', label: 'SuperAdmin',     roles: ['superadmin'] },
 ]
 
 export default function Sidebar() {
@@ -70,7 +71,9 @@ export default function Sidebar() {
         }}>
           Menú
         </p>
-        {links.map(({ to, icon, label }) => (
+        {links
+          .filter(l => !l.roles || l.roles.includes(usuario?.rol))
+          .map(({ to, icon, label }) => (
           <NavLink key={to} to={to} style={({ isActive }) => ({
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '9px 12px', borderRadius: 10, marginBottom: 2,
