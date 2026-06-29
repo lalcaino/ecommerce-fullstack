@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getToken, getUsuario, logout } from '../services/authService'
 
-const BASE_URL     = import.meta.env.VITE_API_URL    || 'http://localhost:8000/api'
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || ''
-
-const BODEGA_CENTRAL = { lon: -70.6506, lat: -33.4372 }
 
 const C = {
   brand: '#408A71', brandDark: '#2e6b57', brandLight: '#e8f5f0',
@@ -16,20 +14,18 @@ const C = {
 }
 
 const ESTADO_META = {
-  PENDIENTE:  { color: C.warning, icon: '⏳', label: 'Pendiente'  },
-  EN_RUTA:    { color: C.info,    icon: '🚚', label: 'En ruta'    },
+  PENDIENTE:  { color: C.warning, icon: '⏳', label: 'Disponible' },
+  EN_RUTA:    { color: C.info,    icon: '🚚', label: 'En ruta' },
   COMPLETADO: { color: C.success, icon: '✅', label: 'Completado' },
-  FALLIDO:    { color: C.error,   icon: '❌', label: 'Fallido'    },
-  CANCELADO:  { color: C.gray400, icon: '🚫', label: 'Cancelado'  },
+  FALLIDO:    { color: C.error,   icon: '❌', label: 'Fallido' },
+  CANCELADO:  { color: C.gray400, icon: '🚫', label: 'Cancelado' },
 }
-
-const ROUTE_COLORS = ['#408A71', '#3b82f6', '#f97316', '#8b5cf6', '#ec4899', '#14b8a6']
 
 async function apiBFF(path, options = {}) {
   const token = getToken()
-  const res   = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
-    headers: { Authorization: `Bearer ${token}`, ...options.headers },
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...options.headers },
   })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
@@ -39,383 +35,97 @@ async function apiBFF(path, options = {}) {
   return res.json()
 }
 
-// ─── Modal foto de entrega ────────────────────────────────────────────────────
-function ModalFotoEntrega({ envio, onConfirmar, onCancelar, cargando }) {
-  const [foto,    setFoto]    = useState(null)
-  const [preview, setPreview] = useState(null)
-  const [error,   setError]   = useState('')
-  const inputRef = useRef(null)
-
-  const handleFoto = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    if (!['image/jpeg','image/png','image/webp'].includes(file.type)) { setError('Solo JPG, PNG o WebP.'); return }
-    if (file.size > 10 * 1024 * 1024) { setError('Máximo 10MB.'); return }
-    setError('')
-    setFoto(file)
-    setPreview(URL.createObjectURL(file))
-  }
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: C.white, borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', width: '100%', maxWidth: 480 }}>
-        <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: C.gray800 }}>📸 Confirmar Entrega</h3>
-        <p style={{ margin: '0 0 20px', fontSize: 14, color: C.gray500 }}>Envío #{envio.id} — {envio.destino_nombre}</p>
-
-        <div onClick={() => inputRef.current?.click()} style={{
-          border: `2px dashed ${preview ? C.brand : C.gray200}`, borderRadius: 14,
-          padding: 20, textAlign: 'center', cursor: 'pointer', marginBottom: 16,
-          background: preview ? C.brandLight : C.gray100,
-        }}>
-          {preview ? (
-            <img src={preview} alt="preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10 }} />
-          ) : (
-            <>
-              <div style={{ fontSize: 40, marginBottom: 8 }}>📷</div>
-              <p style={{ margin: 0, fontWeight: 700, color: C.gray700 }}>Toca para tomar foto</p>
-              <p style={{ margin: '4px 0 0', fontSize: 12, color: C.gray400 }}>o seleccionar de la galería</p>
-            </>
-          )}
-        </div>
-
-        <input ref={inputRef} type="file" accept="image/*" capture="environment" onChange={handleFoto} style={{ display: 'none' }} />
-        {error && <p style={{ color: C.error, fontSize: 13, fontWeight: 600, marginBottom: 12 }}>⚠️ {error}</p>}
-
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={() => { if (!foto) { setError('Debes tomar o seleccionar una foto.'); return } onConfirmar(foto) }}
-            disabled={cargando}
-            style={{ flex: 1, background: foto && !cargando ? C.success : C.gray200, color: foto && !cargando ? '#fff' : C.gray400, border: 'none', borderRadius: 12, padding: '14px 0', fontSize: 16, fontWeight: 700, cursor: foto && !cargando ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
-            {cargando ? 'Confirmando...' : '✅ Confirmar Entrega'}
-          </button>
-          <button onClick={onCancelar} disabled={cargando}
-            style={{ background: C.gray100, color: C.gray700, border: `1px solid ${C.gray200}`, borderRadius: 12, padding: '14px 20px', fontSize: 16, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Cancelar
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+function formatDist(km) {
+  if (!km) return ''
+  const d = parseFloat(km)
+  return d < 1 ? `${Math.round(d * 1000)} m` : `${d.toFixed(1)} km`
 }
 
-// ─── Card de envío ────────────────────────────────────────────────────────────
-function EnvioCard({ envio, idx, seleccionado, onSelect, onIniciarEntrega, onAbrirWaze }) {
-  const meta  = ESTADO_META[envio.estado] || ESTADO_META.PENDIENTE
-  const color = ROUTE_COLORS[idx % ROUTE_COLORS.length]
-
-  return (
-    <div onClick={() => onSelect(envio)} style={{
-      background: C.white, borderRadius: 14,
-      border: `2px solid ${seleccionado ? C.brand : C.gray200}`,
-      borderLeft: `4px solid ${color}`,
-      padding: '14px 16px', marginBottom: 10, cursor: 'pointer',
-      boxShadow: seleccionado ? '0 4px 16px rgba(64,138,113,0.15)' : 'none',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 24, height: 24, borderRadius: '50%', background: color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
-            {idx + 1}
-          </div>
-          <div>
-            <span style={{ fontWeight: 800, fontSize: 15, color: C.gray800 }}>Envío #{envio.id}</span>
-            <span style={{ fontSize: 12, color: C.gray400, marginLeft: 8 }}>Pedido #{envio.pedido_id}</span>
-          </div>
-        </div>
-        <span style={{ background: meta.color + '18', color: meta.color, border: `1px solid ${meta.color}30`, borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 700 }}>
-          {meta.icon} {meta.label}
-        </span>
-      </div>
-
-      <p style={{ margin: '0 0 4px', fontSize: 13, color: C.gray700 }}>📍 {envio.destino_nombre}</p>
-
-      {(envio.distancia_km || envio.duracion_min) && (
-        <p style={{ margin: '0 0 8px', fontSize: 12, color: C.gray500 }}>
-          {envio.distancia_km && `🛣 ${parseFloat(envio.distancia_km).toFixed(1)} km`}
-          {envio.distancia_km && envio.duracion_min && ' · '}
-          {envio.duracion_min && `⏱ ~${envio.duracion_min} min`}
-        </p>
-      )}
-
-      {seleccionado && envio.estado !== 'COMPLETADO' && envio.estado !== 'CANCELADO' && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 10 }} onClick={e => e.stopPropagation()}>
-          <button onClick={() => onAbrirWaze(envio)} style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            background: '#00D8FF18', color: '#00A8CC', border: '1.5px solid #00D8FF40',
-            borderRadius: 10, padding: '10px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-          }}>🗺️ Waze</button>
-          {envio.estado === 'EN_RUTA' && (
-            <button onClick={() => onIniciarEntrega(envio)} style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              background: C.success + '18', color: C.success, border: `1.5px solid ${C.success}40`,
-              borderRadius: 10, padding: '10px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-            }}>📸 Confirmar</button>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Componente principal ─────────────────────────────────────────────────────
 export default function VistaRepartidor() {
   const navigate = useNavigate()
-  const usuario  = getUsuario()
+  const usuario = getUsuario()
 
-  const mapRef          = useRef(null)
-  const mapContainerRef = useRef(null)
-  const markersRef      = useRef([])
-
-  const [envios,         setEnvios]         = useState([])
-  const [loading,        setLoading]        = useState(true)
-  const [error,          setError]          = useState(null)
-  const [seleccionado,   setSeleccionado]   = useState(null)
-  const [modalEntrega,   setModalEntrega]   = useState(null)
-  const [confirmando,    setConfirmando]    = useState(false)
-  const [panelAbierto,   setPanelAbierto]   = useState(true)
-  const [toast,          setToast]          = useState(null)
-  const [modoRuta,       setModoRuta]       = useState(false)
-  const [rutaInfo,       setRutaInfo]       = useState(null)  // { distanciaTotal, duracionTotal }
-  const [calculandoRuta, setCalculandoRuta] = useState(false)
+  const [ubicacion, setUbicacion] = useState(null)
+  const [ubicacionError, setUbicacionError] = useState(null)
+  const [envios, setEnvios] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [vista, setVista] = useState('lista')
+  const [seleccionado, setSeleccionado] = useState(null)
+  const [codigoInput, setCodigoInput] = useState('')
+  const [codigoError, setCodigoError] = useState('')
+  const [confirmando, setConfirmando] = useState(false)
+  const [foto, setFoto] = useState(null)
+  const [fotoPreview, setFotoPreview] = useState(null)
+  const [toast, setToast] = useState(null)
+  const [historial, setHistorial] = useState([])
+  const [cargandoHistorial, setCargandoHistorial] = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
 
   const mostrarToast = (msg, color = C.success) => {
     setToast({ msg, color })
     setTimeout(() => setToast(null), 3500)
   }
 
-  const fetchEnvios = useCallback(async () => {
+  // Obtener ubicación GPS
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setUbicacionError('Geolocalización no soportada')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUbicacion({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+      },
+      (err) => {
+        setUbicacionError('No se pudo obtener ubicación. Usa la app desde tu teléfono.')
+        setUbicacion({ lat: -33.4372, lon: -70.6506 })
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    )
+  }, [])
+
+  // Cargar envíos cercanos
+  const fetchEnviosCercanos = useCallback(async () => {
+    if (!ubicacion) return
     setLoading(true)
     setError(null)
     try {
-      const data   = await apiBFF('/envios/')
-      const activos = (Array.isArray(data) ? data : []).filter(
-        e => ['PENDIENTE', 'EN_RUTA'].includes(e.estado)
-      )
-      setEnvios(activos)
+      const data = await apiBFF(`/envios/cercanos/?lat=${ubicacion.lat}&lon=${ubicacion.lon}&radio_km=50`)
+      setEnvios(Array.isArray(data) ? data : [])
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [ubicacion])
 
-  useEffect(() => { fetchEnvios() }, [fetchEnvios])
+  useEffect(() => { fetchEnviosCercanos() }, [fetchEnviosCercanos])
 
-  // ── Inicializar mapa ──────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!MAPBOX_TOKEN || mapRef.current || !mapContainerRef.current) return
-    import('mapbox-gl').then(mod => {
-      const mapboxgl        = mod.default
-      mapboxgl.accessToken  = MAPBOX_TOKEN
-      mapRef.current        = new mapboxgl.Map({
-        container: mapContainerRef.current,
-        style:     'mapbox://styles/mapbox/streets-v12',
-        center:    [BODEGA_CENTRAL.lon, BODEGA_CENTRAL.lat],
-        zoom:      12,
-        attributionControl: false,
-      })
-      mapRef.current.addControl(
-        new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true }),
-        'bottom-right'
-      )
-      mapRef.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
-
-      // Marker bodega central
-      const el        = document.createElement('div')
-      el.style.cssText = `width:32px;height:32px;border-radius:50%;background:#2e6b57;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:16px;`
-      el.innerHTML     = '🏭'
-      new mapboxgl.Marker({ element: el }).setLngLat([BODEGA_CENTRAL.lon, BODEGA_CENTRAL.lat]).addTo(mapRef.current)
-    }).catch(() => {})
-  }, [])
-
-  // ── Dibujar marcadores individuales ──────────────────────────────────────
-  const dibujarMarcadores = useCallback(async () => {
-    const map = mapRef.current
-    if (!map || modoRuta) return
-    let mapboxgl
-    try { mapboxgl = (await import('mapbox-gl')).default } catch { return }
-
-    markersRef.current.forEach(m => m.remove())
-    markersRef.current = []
-
-    const bounds = new mapboxgl.LngLatBounds()
-    bounds.extend([BODEGA_CENTRAL.lon, BODEGA_CENTRAL.lat])
-
-    envios.forEach((envio, idx) => {
-      const lon   = parseFloat(envio.destino_lon)
-      const lat   = parseFloat(envio.destino_lat)
-      if (isNaN(lon) || isNaN(lat)) return
-      bounds.extend([lon, lat])
-
-      const color = ROUTE_COLORS[idx % ROUTE_COLORS.length]
-      const meta  = ESTADO_META[envio.estado] || ESTADO_META.PENDIENTE
-      const el    = document.createElement('div')
-      el.style.cssText = `width:36px;height:36px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;font-weight:800;color:#fff;`
-      el.innerHTML     = idx + 1
-
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([lon, lat])
-        .setPopup(new mapboxgl.Popup({ offset: 20 }).setHTML(`
-          <div style="font-size:13px;font-weight:700">Envío #${envio.id}</div>
-          <div style="font-size:12px;color:#6b7280">📍 ${envio.destino_nombre}</div>
-          <div style="margin-top:4px">
-            <span style="background:${meta.color}18;color:${meta.color};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700">${meta.icon} ${meta.label}</span>
-          </div>
-        `))
-        .addTo(map)
-      markersRef.current.push(marker)
-    })
-
-    if (!bounds.isEmpty() && envios.length > 0) {
-      map.fitBounds(bounds, { padding: 80, maxZoom: 14, duration: 800 })
-    }
-  }, [envios, modoRuta])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
-    if (map.isStyleLoaded()) dibujarMarcadores()
-    else map.once('load', dibujarMarcadores)
-  }, [dibujarMarcadores])
-
-  // ── Ruta acumulada ────────────────────────────────────────────────────────
-  const calcularRutaAcumulada = useCallback(async () => {
-    const map = mapRef.current
-    if (!map || !MAPBOX_TOKEN || envios.length === 0) return
-
-    setCalculandoRuta(true)
-    let mapboxgl
-    try { mapboxgl = (await import('mapbox-gl')).default } catch { setCalculandoRuta(false); return }
-
-    // Limpiar marcadores anteriores
-    markersRef.current.forEach(m => m.remove())
-    markersRef.current = []
-
-    // Limpiar capas anteriores
-    const style = map.getStyle()
-    if (style) {
-      style.layers?.forEach(l => {
-        if (l.id.startsWith('ruta-acumulada')) {
-          try { map.removeLayer(l.id) } catch {}
-        }
-      })
-      Object.keys(style.sources || {}).forEach(id => {
-        if (id.startsWith('ruta-acumulada')) {
-          try { map.removeSource(id) } catch {}
-        }
-      })
-    }
-
-    // Armar waypoints: bodega → envío1 → envío2 → ... → envíoN
-    const puntos = [BODEGA_CENTRAL]
-    const enviosValidos = envios.filter(e => {
-      const lon = parseFloat(e.destino_lon)
-      const lat = parseFloat(e.destino_lat)
-      return !isNaN(lon) && !isNaN(lat)
-    })
-
-    enviosValidos.forEach(e => puntos.push({ lon: parseFloat(e.destino_lon), lat: parseFloat(e.destino_lat) }))
-
-    if (puntos.length < 2) { setCalculandoRuta(false); return }
-
-    const waypointsStr = puntos.map(p => `${p.lon},${p.lat}`).join(';')
-
+  // Cargar historial del repartidor
+  const fetchHistorial = async () => {
+    setCargandoHistorial(true)
     try {
-      const url  = `https://api.mapbox.com/directions/v5/mapbox/driving/${waypointsStr}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`
-      const res  = await fetch(url)
-      const data = await res.json()
-
-      if (!data.routes?.length) throw new Error('Sin ruta disponible')
-
-      const route        = data.routes[0]
-      const distanciaKm  = (route.distance / 1000).toFixed(1)
-      const duracionMin  = Math.round(route.duration / 60)
-      setRutaInfo({ distanciaKm, duracionMin, total: enviosValidos.length })
-
-      // Dibujar ruta
-      map.addSource('ruta-acumulada-src', { type: 'geojson', data: { type: 'Feature', geometry: route.geometry } })
-      map.addLayer({ id: 'ruta-acumulada-outline', type: 'line', source: 'ruta-acumulada-src', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 9, 'line-opacity': .6 } })
-      map.addLayer({ id: 'ruta-acumulada-line',    type: 'line', source: 'ruta-acumulada-src', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': C.brand,   'line-width': 5 } })
-
-      // Marcadores numerados
-      const bounds = new mapboxgl.LngLatBounds()
-      puntos.forEach((p, idx) => {
-        bounds.extend([p.lon, p.lat])
-        const el        = document.createElement('div')
-        const color     = idx === 0 ? C.brandDark : ROUTE_COLORS[(idx - 1) % ROUTE_COLORS.length]
-        el.style.cssText = `width:34px;height:34px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;`
-        el.innerHTML     = idx === 0 ? '🏭' : idx
-
-        const envio = idx > 0 ? enviosValidos[idx - 1] : null
-        const popup = new mapboxgl.Popup({ offset: 20 }).setHTML(
-          idx === 0
-            ? `<div style="font-size:13px;font-weight:700">Bodega Central</div><div style="font-size:11px;color:#6b7280">Punto de partida</div>`
-            : `<div style="font-size:13px;font-weight:700">Parada ${idx} — Envío #${envio.id}</div><div style="font-size:12px;color:#6b7280">📍 ${envio.destino_nombre}</div>`
-        )
-        markersRef.current.push(new mapboxgl.Marker({ element: el }).setLngLat([p.lon, p.lat]).setPopup(popup).addTo(map))
-      })
-
-      map.fitBounds(bounds, { padding: 80, maxZoom: 13, duration: 1000 })
-
-    } catch (err) {
-      mostrarToast('No se pudo calcular la ruta: ' + err.message, C.error)
-    } finally {
-      setCalculandoRuta(false)
-    }
-  }, [envios])
-
-  const toggleModoRuta = () => {
-    if (!modoRuta) {
-      setModoRuta(true)
-      calcularRutaAcumulada()
-    } else {
-      // Volver a modo individual
-      setModoRuta(false)
-      setRutaInfo(null)
-      // Limpiar capas de ruta
-      const map = mapRef.current
-      if (map) {
-        ['ruta-acumulada-outline', 'ruta-acumulada-line'].forEach(id => { try { map.removeLayer(id) } catch {} })
-        try { map.removeSource('ruta-acumulada-src') } catch {}
-      }
-    }
+      const data = await apiBFF('/envios/')
+      const misEnvios = Array.isArray(data)
+        ? data.filter(e => e.repartidor_id === usuario?.id || e.estado === 'COMPLETED')
+        : []
+      setHistorial(misEnvios.slice(0, 20))
+    } catch { }
+    finally { setCargandoHistorial(false) }
   }
 
-  // Volar al envío seleccionado
-  useEffect(() => {
-    if (!seleccionado || !mapRef.current || modoRuta) return
-    const lon = parseFloat(seleccionado.destino_lon)
-    const lat = parseFloat(seleccionado.destino_lat)
-    if (!isNaN(lon) && !isNaN(lat)) {
-      mapRef.current.flyTo({ center: [lon, lat], zoom: 15, duration: 800 })
-    }
-  }, [seleccionado, modoRuta])
-
-  const handleAbrirWaze = (envio) => {
-    const lat = parseFloat(envio.destino_lat)
-    const lon = parseFloat(envio.destino_lon)
-    if (isNaN(lat) || isNaN(lon)) {
-      window.open(`https://waze.com/ul?q=${encodeURIComponent(envio.destino_nombre)}&navigate=yes`, '_blank')
-    } else {
-      window.open(`https://waze.com/ul?ll=${lat},${lon}&navigate=yes`, '_blank')
-    }
-  }
-
-  const handleConfirmarEntrega = async (foto) => {
-    if (!modalEntrega) return
+  // Tomar pedido
+  const handleTomar = async (envio) => {
     setConfirmando(true)
     try {
-      const formData = new FormData()
-      formData.append('foto', foto)
-      const token = getToken()
-      const res   = await fetch(`${BASE_URL}/envios/${modalEntrega.id}/foto-entrega/`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData,
+      const data = await apiBFF(`/envios/${envio.id}/tomar/`, {
+        method: 'POST',
+        body: JSON.stringify({ repartidor_id: usuario?.id }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Error al confirmar entrega')
-      setEnvios(prev => prev.filter(e => e.id !== modalEntrega.id))
-      setModalEntrega(null)
-      setSeleccionado(null)
-      if (modoRuta) { setModoRuta(false); setRutaInfo(null) }
-      mostrarToast(`✅ Entrega del Envío #${modalEntrega.id} confirmada.`)
+      setSeleccionado({ ...envio, ...data.envio, codigo_validacion: data.codigo_validacion })
+      setVista('codigo')
+      mostrarToast(`Código: ${data.codigo_validacion} — entrégalo en tienda/bodega`)
     } catch (err) {
       mostrarToast(err.message, C.error)
     } finally {
@@ -423,176 +133,394 @@ export default function VistaRepartidor() {
     }
   }
 
-  const enviosEnRuta      = envios.filter(e => e.estado === 'EN_RUTA')
-  const enviosPendientes  = envios.filter(e => e.estado === 'PENDIENTE')
+  // Validar pickup en tienda
+  const handleValidarPickup = async () => {
+    if (!codigoInput.trim()) { setCodigoError('Ingresa el código'); return }
+    setConfirmando(true)
+    try {
+      const data = await apiBFF(`/envios/${seleccionado.id}/validar-pickup/`, {
+        method: 'POST',
+        body: JSON.stringify({ codigo_validacion: codigoInput.trim() }),
+      })
+      setSeleccionado(prev => ({ ...prev, ...data.envio, estado: 'EN_RUTA' }))
+      setVista('mapa')
+      mostrarToast('Pickup validado. ¡En ruta!')
+      setCodigoInput('')
+      setCodigoError('')
+    } catch (err) {
+      setCodigoError(err.message)
+    } finally {
+      setConfirmando(false)
+    }
+  }
 
-  return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative', fontFamily: "'Khula', sans-serif" }}>
+  // Abrir Waze
+  const handleAbrirWaze = () => {
+    if (!seleccionado) return
+    const lat = parseFloat(seleccionado.destino_lat)
+    const lon = parseFloat(seleccionado.destino_lon)
+    if (!isNaN(lat) && !isNaN(lon)) {
+      window.open(`https://waze.com/ul?ll=${lat},${lon}&navigate=yes`, '_blank')
+    } else {
+      window.open(`https://waze.com/ul?q=${encodeURIComponent(seleccionado.destino_nombre)}&navigate=yes`, '_blank')
+    }
+  }
 
-      {/* Mapa fullscreen */}
-      <div ref={mapContainerRef} style={{ position: 'absolute', inset: 0 }}>
-        {!MAPBOX_TOKEN && (
-          <div style={{ position: 'absolute', inset: 0, background: C.gray100, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 40 }}>🗺️</span>
-            <p style={{ color: C.gray500, fontWeight: 600 }}>Configura VITE_MAPBOX_TOKEN</p>
-          </div>
-        )}
-      </div>
+  // Subir foto a Cloudinary via BFF
+  const handleFotoChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { mostrarToast('Solo JPG, PNG o WebP', C.error); return }
+    if (file.size > 10 * 1024 * 1024) { mostrarToast('Máximo 10MB', C.error); return }
+    setFoto(file)
+    setFotoPreview(URL.createObjectURL(file))
+  }
 
-      {/* Header */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100,
-        background: C.brand, padding: '12px 16px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 20 }}>🚚</span>
-          <div>
-            <p style={{ margin: 0, fontWeight: 800, fontSize: 15, color: '#fff' }}>{usuario?.nombre || 'Repartidor'}</p>
-            <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>
-              {enviosEnRuta.length} en ruta · {enviosPendientes.length} pendiente{enviosPendientes.length !== 1 ? 's' : ''}
-            </p>
-          </div>
+  const handleCompletar = async () => {
+    if (!foto) { mostrarToast('Debes tomar una foto', C.error); return }
+    setConfirmando(true)
+    try {
+      const formData = new FormData()
+      formData.append('foto', foto)
+      const token = getToken()
+      const uploadRes = await fetch(`${BASE_URL}/envios/${seleccionado.id}/foto-entrega/`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      })
+      const uploadData = await uploadRes.json()
+      if (!uploadRes.ok) throw new Error(uploadData.detail || 'Error al subir foto')
+
+      const fotoUrl = uploadData.foto_url || uploadData.url
+      const completarRes = await apiBFF(`/envios/${seleccionado.id}/completar/`, {
+        method: 'POST',
+        body: JSON.stringify({ foto_entrega_url: fotoUrl }),
+      })
+      setVista('completado')
+      mostrarToast('Entrega completada exitosamente')
+      setFoto(null)
+      setFotoPreview(null)
+      fetchEnviosCercanos()
+    } catch (err) {
+      mostrarToast(err.message, C.error)
+    } finally {
+      setConfirmando(false)
+    }
+  }
+
+  const volverALista = () => {
+    setSeleccionado(null)
+    setVista('lista')
+    setCodigoInput('')
+    setCodigoError('')
+    setFoto(null)
+    setFotoPreview(null)
+  }
+
+  // ─── Pantalla: Código de validación ────────────────────────────
+  if (vista === 'codigo' && seleccionado) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <button onClick={volverALista} style={styles.backBtn}>←</button>
+          <span style={styles.headerTitle}>Código de recogida</span>
+          <div style={{ width: 40 }} />
         </div>
-
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {/* Botón ruta acumulada */}
-          {envios.length > 1 && MAPBOX_TOKEN && (
-            <button onClick={toggleModoRuta} disabled={calculandoRuta} style={{
-              background: modoRuta ? '#fff' : 'rgba(255,255,255,0.2)',
-              color: modoRuta ? C.brand : '#fff',
-              border: modoRuta ? 'none' : '1.5px solid rgba(255,255,255,0.4)',
-              borderRadius: 8, padding: '6px 12px',
-              fontSize: 13, fontWeight: 700, cursor: calculandoRuta ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4,
-            }}>
-              {calculandoRuta ? '⏳' : modoRuta ? '📍 Ver individual' : '🗺️ Ruta completa'}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+          <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: C.gray800, textAlign: 'center' }}>
+            Entrega este código en {seleccionado.origen_nombre || 'la tienda/bodega'}
+          </h2>
+          <p style={{ margin: '0 0 24px', color: C.gray500, fontSize: 14, textAlign: 'center' }}>
+            El encargado ingresará el código para liberar el pedido
+          </p>
+          <div style={{
+            background: C.brandLight, borderRadius: 16, padding: '20px 40px',
+            marginBottom: 24, border: `2px dashed ${C.brand}`,
+          }}>
+            <span style={{ fontSize: 40, fontWeight: 900, letterSpacing: 12, color: C.brand, fontFamily: 'monospace' }}>
+              {seleccionado.codigo_validacion || '------'}
+            </span>
+          </div>
+          {seleccionado.estado === 'EN_RUTA' && (
+            <button onClick={() => setVista('mapa')} style={{ ...styles.btnPrimary, width: '100%' }}>
+              🚚 Ya lo tengo — Ir a destino
             </button>
           )}
+        </div>
+      </div>
+    )
+  }
 
-          <button onClick={() => { logout(); navigate('/login') }}
-            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '6px 12px', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Salir
+  // ─── Pantalla: Mapa / Entrega ──────────────────────────────────
+  if (vista === 'mapa' && seleccionado) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <button onClick={volverALista} style={styles.backBtn}>←</button>
+          <span style={styles.headerTitle}>Envío #{seleccionado.id}</span>
+          <div style={{ width: 40 }} />
+        </div>
+        <div style={{ flex: 1, padding: 16, overflowY: 'auto' }}>
+          <div style={styles.card}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <span style={{ fontSize: 24 }}>📍</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: C.gray800 }}>{seleccionado.destino_nombre}</p>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: C.gray500 }}>Pedido #{seleccionado.pedido_id}</p>
+              </div>
+              <span style={{ background: C.info + '18', color: C.info, borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 700 }}>
+                🚚 En ruta
+              </span>
+            </div>
+
+            {seleccionado.origen_nombre && (
+              <div style={{ background: C.gray100, borderRadius: 10, padding: 12, marginBottom: 12 }}>
+                <p style={{ margin: 0, fontSize: 12, color: C.gray500 }}>Origen</p>
+                <p style={{ margin: '2px 0 0', fontWeight: 600, fontSize: 14, color: C.gray800 }}>🏪 {seleccionado.origen_nombre}</p>
+              </div>
+            )}
+
+            {seleccionado.distancia_km && (
+              <div style={{ background: C.brandLight, borderRadius: 10, padding: 12, marginBottom: 12, display: 'flex', gap: 16 }}>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.brand }}>{formatDist(seleccionado.distancia_km)}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: C.gray500 }}>Distancia</p>
+                </div>
+                {seleccionado.duracion_min && (
+                  <div style={{ textAlign: 'center', flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.brand }}>~{seleccionado.duracion_min} min</p>
+                    <p style={{ margin: 0, fontSize: 11, color: C.gray500 }}>Tiempo</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button onClick={handleAbrirWaze} style={{
+              ...styles.btnPrimary, background: '#00D8FF', color: '#fff', marginBottom: 12,
+            }}>
+              🗺️ Abrir en Waze
+            </button>
+
+            <p style={{ margin: '16px 0 8px', fontWeight: 700, fontSize: 14, color: C.gray800 }}>
+              📸 Confirmar entrega
+            </p>
+            <div onClick={() => document.getElementById('foto-input')?.click()} style={{
+              border: `2px dashed ${fotoPreview ? C.success : C.gray200}`,
+              borderRadius: 14, padding: 20, textAlign: 'center', cursor: 'pointer',
+              background: fotoPreview ? C.brandLight : C.gray100, marginBottom: 12,
+            }}>
+              {fotoPreview ? (
+                <img src={fotoPreview} alt="preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10 }} />
+              ) : (
+                <>
+                  <div style={{ fontSize: 40, marginBottom: 8 }}>📷</div>
+                  <p style={{ margin: 0, fontWeight: 700, color: C.gray700 }}>Toca para tomar foto</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: C.gray400 }}>de la entrega</p>
+                </>
+              )}
+            </div>
+            <input id="foto-input" type="file" accept="image/*" capture="environment" onChange={handleFotoChange} style={{ display: 'none' }} />
+
+            <button onClick={handleCompletar} disabled={!foto || confirmando} style={{
+              ...styles.btnPrimary, width: '100%',
+              background: foto && !confirmando ? C.success : C.gray200,
+              color: foto && !confirmando ? '#fff' : C.gray400,
+            }}>
+              {confirmando ? 'Completando...' : '✅ Completar entrega'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Pantalla: Completado ──────────────────────────────────────
+  if (vista === 'completado') {
+    return (
+      <div style={styles.container}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ fontSize: 80, marginBottom: 20 }}>🎉</div>
+          <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800, color: C.success, textAlign: 'center' }}>
+            ¡Entrega completada!
+          </h2>
+          <p style={{ margin: '0 0 32px', color: C.gray500, textAlign: 'center', fontSize: 14 }}>
+            Envío #{seleccionado?.id} entregado exitosamente
+          </p>
+          <button onClick={() => { volverALista(); fetchEnviosCercanos() }} style={{ ...styles.btnPrimary, width: '100%' }}>
+            🏠 Volver al inicio
           </button>
         </div>
       </div>
+    )
+  }
 
-      {/* Info ruta acumulada */}
-      {modoRuta && rutaInfo && (
+  // ─── Pantalla: Lista principal ──────────────────────────────────
+  return (
+    <div style={styles.container}>
+      {menuAbierto && (
         <div style={{
-          position: 'absolute', top: 66, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 100, background: 'rgba(255,255,255,0.95)',
-          backdropFilter: 'blur(8px)', borderRadius: 12,
-          padding: '10px 20px', boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-          display: 'flex', gap: 20, alignItems: 'center',
+          position: 'fixed', inset: 0, zIndex: 9999, background: C.white,
+          display: 'flex', flexDirection: 'column',
         }}>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.gray800 }}>{rutaInfo.distanciaKm} km</p>
-            <p style={{ margin: 0, fontSize: 11, color: C.gray500 }}>Distancia total</p>
+          <div style={{ ...styles.header, background: C.brand }}>
+            <button onClick={() => setMenuAbierto(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#fff', padding: 0 }}>✕</button>
+            <span style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>Menú</span>
+            <div style={{ width: 24 }} />
           </div>
-          <div style={{ width: 1, height: 36, background: C.gray200 }} />
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.gray800 }}>{rutaInfo.duracionMin} min</p>
-            <p style={{ margin: 0, fontSize: 11, color: C.gray500 }}>Tiempo estimado</p>
-          </div>
-          <div style={{ width: 1, height: 36, background: C.gray200 }} />
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.brand }}>{rutaInfo.total}</p>
-            <p style={{ margin: 0, fontSize: 11, color: C.gray500 }}>Paradas</p>
+          <div style={{ padding: 24 }}>
+            <div style={{ marginBottom: 24, textAlign: 'center' }}>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: C.brandLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 12px' }}>👤</div>
+              <p style={{ margin: 0, fontWeight: 800, fontSize: 18, color: C.gray800 }}>{usuario?.nombre || 'Repartidor'}</p>
+              <p style={{ margin: '4px 0 0', fontSize: 13, color: C.gray500 }}>{usuario?.email || ''}</p>
+            </div>
+
+            <button onClick={() => { setMenuAbierto(false); fetchHistorial(); setVista('historial') }} style={styles.menuBtn}>
+              📋 Historial de entregas
+            </button>
+            <button onClick={() => { logout(); navigate('/login') }} style={{ ...styles.menuBtn, color: C.error }}>
+              🚪 Cerrar sesión
+            </button>
           </div>
         </div>
       )}
 
-      {/* Panel inferior */}
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100,
-        background: C.white, borderRadius: '20px 20px 0 0',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
-        maxHeight: panelAbierto ? '60vh' : '72px',
-        transition: 'max-height .35s ease',
-        overflow: 'hidden', display: 'flex', flexDirection: 'column',
-      }}>
-        {/* Handle */}
-        <div onClick={() => setPanelAbierto(v => !v)} style={{ padding: '12px 16px', cursor: 'pointer', flexShrink: 0 }}>
-          <div style={{ width: 40, height: 4, background: C.gray200, borderRadius: 2, margin: '0 auto 10px' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: C.gray800 }}>
-              {modoRuta ? '🗺️ Ruta del día' : 'Mis Envíos'}
-            </h3>
-            <span style={{ fontSize: 18, color: C.gray400 }}>{panelAbierto ? '⌄' : '⌃'}</span>
-          </div>
-        </div>
-
-        {/* Lista */}
-        <div style={{ overflowY: 'auto', padding: '0 16px 20px', flex: 1 }}>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 24, color: C.gray400 }}>Cargando envíos...</div>
-          ) : error ? (
-            <div style={{ color: C.error, fontSize: 13, padding: 12 }}>⚠️ {error}</div>
-          ) : envios.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 24, color: C.gray400 }}>
-              <p style={{ fontSize: 32, marginBottom: 8 }}>🎉</p>
-              <p style={{ fontWeight: 600 }}>Sin envíos pendientes</p>
-            </div>
-          ) : (
-            <>
-              {enviosEnRuta.length > 0 && (
-                <>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: C.info, textTransform: 'uppercase', letterSpacing: '.5px', margin: '8px 0 8px' }}>
-                    🚚 En ruta ({enviosEnRuta.length})
-                  </p>
-                  {enviosEnRuta.map((e, idx) => (
-                    <EnvioCard key={e.id} envio={e} idx={idx}
-                      seleccionado={seleccionado?.id === e.id}
-                      onSelect={env => setSeleccionado(prev => prev?.id === env.id ? null : env)}
-                      onIniciarEntrega={env => setModalEntrega(env)}
-                      onAbrirWaze={handleAbrirWaze}
-                    />
-                  ))}
-                </>
-              )}
-              {enviosPendientes.length > 0 && (
-                <>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: C.warning, textTransform: 'uppercase', letterSpacing: '.5px', margin: '12px 0 8px' }}>
-                    ⏳ Pendientes ({enviosPendientes.length})
-                  </p>
-                  {enviosPendientes.map((e, idx) => (
-                    <EnvioCard key={e.id} envio={e} idx={enviosEnRuta.length + idx}
-                      seleccionado={seleccionado?.id === e.id}
-                      onSelect={env => setSeleccionado(prev => prev?.id === env.id ? null : env)}
-                      onIniciarEntrega={env => setModalEntrega(env)}
-                      onAbrirWaze={handleAbrirWaze}
-                    />
-                  ))}
-                </>
-              )}
-            </>
+      {/* Header */}
+      <div style={styles.header}>
+        <button onClick={() => setMenuAbierto(true)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#fff', padding: 0 }}>☰</button>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ margin: 0, fontWeight: 800, fontSize: 16, color: '#fff' }}>Pedidos disponibles</p>
+          {ubicacion && (
+            <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
+              {envios.length} en tu zona
+            </p>
           )}
         </div>
+        <div style={{ width: 24 }} />
       </div>
 
-      {/* Modal foto entrega */}
-      {modalEntrega && (
-        <ModalFotoEntrega
-          envio={modalEntrega}
-          onConfirmar={handleConfirmarEntrega}
-          onCancelar={() => setModalEntrega(null)}
-          cargando={confirmando}
-        />
-      )}
+      {/* Contenido */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+        {ubicacionError && (
+          <div style={{ background: C.warning + '18', borderRadius: 12, padding: '12px 16px', marginBottom: 12, fontSize: 13, color: C.warning, fontWeight: 600 }}>
+            📍 {ubicacionError}
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: C.gray400 }}>Cargando pedidos cercanos...</div>
+        ) : error ? (
+          <div style={{ background: C.error + '12', borderRadius: 12, padding: 16, color: C.error, fontSize: 14, fontWeight: 600 }}>
+            ⚠️ {error}
+          </div>
+        ) : envios.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+            <p style={{ fontWeight: 700, fontSize: 16, color: C.gray800, margin: '0 0 4px' }}>Sin pedidos disponibles</p>
+            <p style={{ fontSize: 13, color: C.gray500, margin: 0 }}>Nuevos pedidos aparecerán aquí automáticamente</p>
+          </div>
+        ) : (
+          envios.map((envio, idx) => {
+            const dist = envio.distancia_km_repartidor
+            return (
+              <div key={envio.id} style={{
+                background: C.white, borderRadius: 14, border: `1px solid ${C.gray200}`,
+                borderLeft: `4px solid ${C.brand}`, padding: '14px 16px', marginBottom: 10,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: 15, color: C.gray800 }}>
+                      Pedido #{envio.pedido_id || envio.id}
+                    </p>
+                    <p style={{ margin: '2px 0 0', fontSize: 13, color: C.gray600 }}>📍 {envio.destino_nombre}</p>
+                  </div>
+                  {dist && (
+                    <span style={{ background: C.brandLight, color: C.brand, borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      {formatDist(dist)}
+                    </span>
+                  )}
+                </div>
+
+                {envio.origen_nombre && (
+                  <div style={{ background: C.gray100, borderRadius: 8, padding: '8px 12px', marginBottom: 10 }}>
+                    <p style={{ margin: 0, fontSize: 11, color: C.gray500 }}>Origen</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 600, color: C.gray700 }}>🏪 {envio.origen_nombre}</p>
+                  </div>
+                )}
+
+                {(envio.distancia_km || envio.duracion_min) && (
+                  <p style={{ margin: '0 0 10px', fontSize: 12, color: C.gray400 }}>
+                    {envio.distancia_km && `🛣 ${parseFloat(envio.distancia_km).toFixed(1)} km`}
+                    {envio.distancia_km && envio.duracion_min && ' · '}
+                    {envio.duracion_min && `⏱ ~${envio.duracion_min} min`}
+                  </p>
+                )}
+
+                <button onClick={() => handleTomar(envio)} disabled={confirmando} style={{
+                  width: '100%',
+                  background: confirmando ? C.gray200 : C.brand,
+                  color: confirmando ? C.gray400 : '#fff',
+                  border: 'none', borderRadius: 10, padding: '12px 0',
+                  fontSize: 15, fontWeight: 700, cursor: confirmando ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                }}>
+                  {confirmando ? 'Asignando...' : '📦 Tomar pedido'}
+                </button>
+              </div>
+            )
+          })
+        )}
+      </div>
 
       {/* Toast */}
       {toast && (
         <div style={{
           position: 'fixed', top: 70, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 9999, background: toast.color, color: '#fff',
-          borderRadius: 10, padding: '12px 20px', fontSize: 14, fontWeight: 700,
+          zIndex: 9998, background: toast.color, color: '#fff',
+          borderRadius: 12, padding: '12px 20px', fontSize: 14, fontWeight: 700,
           boxShadow: '0 4px 16px rgba(0,0,0,0.2)', maxWidth: '90vw', textAlign: 'center',
+          whiteSpace: 'pre-line',
         }}>
           {toast.msg}
         </div>
       )}
     </div>
   )
+}
+
+const styles = {
+  container: {
+    width: '100vw', height: '100vh', overflow: 'hidden',
+    display: 'flex', flexDirection: 'column',
+    fontFamily: "'Khula', sans-serif", background: C.bg,
+  },
+  header: {
+    background: C.brand, padding: '14px 16px',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.2)', zIndex: 100,
+    flexShrink: 0,
+  },
+  headerTitle: {
+    fontWeight: 800, fontSize: 16, color: '#fff',
+  },
+  backBtn: {
+    background: 'rgba(255,255,255,0.2)', border: 'none',
+    borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+    fontSize: 18, color: '#fff', fontFamily: 'inherit',
+  },
+  btnPrimary: {
+    border: 'none', borderRadius: 10, padding: '14px 0',
+    fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+  },
+  card: {
+    background: C.white, borderRadius: 14, border: `1px solid ${C.gray200}`,
+    padding: '16px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+  },
+  menuBtn: {
+    width: '100%', textAlign: 'left', padding: '14px 16px',
+    background: C.gray100, border: 'none', borderRadius: 10,
+    fontSize: 15, fontWeight: 600, cursor: 'pointer', marginBottom: 8,
+    fontFamily: 'inherit', color: C.gray800,
+  },
 }
