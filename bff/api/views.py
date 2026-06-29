@@ -445,6 +445,62 @@ class EnviosPorPedidoView(APIView):
             return _handle_error(exc)
 
 
+class BodegaEspacioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.get_bodega_espacio(pk))
+        except Exception as exc:
+            return _handle_error(exc)
+
+
+class EnviosCercanosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            lat       = request.query_params.get('lat', '')
+            lon       = request.query_params.get('lon', '')
+            radio_km  = request.query_params.get('radio_km', '10')
+            empresa_rut = _get_empresa_rut(request)
+            return Response(MicroserviceGateway.get_envios_cercanos(lat, lon, radio_km, empresa_rut))
+        except Exception as exc:
+            return _handle_error(exc)
+
+
+class EnvioTomarView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            data = dict(request.data)
+            data['empresa_rut'] = _get_empresa_rut(request)
+            return Response(MicroserviceGateway.tomar_envio(pk, data))
+        except Exception as exc:
+            return _handle_error(exc)
+
+
+class EnvioValidarPickupView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.validar_pickup_envio(pk, request.data))
+        except Exception as exc:
+            return _handle_error(exc)
+
+
+class EnvioCompletarEntregaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            return Response(MicroserviceGateway.completar_entrega_envio(pk, request.data))
+        except Exception as exc:
+            return _handle_error(exc)
+
+
 class ParadaEstadoView(APIView):
     permission_classes = [IsAuthenticated]
 

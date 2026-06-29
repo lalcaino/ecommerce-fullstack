@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     ProductoListView, ProductoDetailView,
     StockAjusteView, BajoStockView,
-    BodegaListView, BodegaDetailView,
+    BodegaListView, BodegaDetailView, BodegaEspacioView,
 )
 
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
     path('productos/bajo-stock/', BajoStockView.as_view()),
     path('bodegas/', BodegaListView.as_view()),
     path('bodegas/<int:pk>/', BodegaDetailView.as_view()),
+    path('bodegas/<int:pk>/espacio/', BodegaEspacioView.as_view()),
 ]

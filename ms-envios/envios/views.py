@@ -1,9 +1,10 @@
+import random
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import (
     EnvioRepository, ParadaRepository, ConductorRepository,
-    EnvioFactory, Parada,
+    EnvioFactory, Parada, Envio, EventoRuta,
 )
 from .serializers import (
     EnvioSerializer, EnvioListSerializer,
@@ -167,6 +168,130 @@ class EnvioPorPedidoView(APIView):
         if not envio:
             return Response({'detail': 'No hay envío para este pedido'}, status=status.HTTP_404_NOT_FOUND)
         return Response(EnvioListSerializer(envio).data)
+
+
+# ─── Envíos Cercanos ──────────────────────────────────────────────────────────
+
+class EnvioCercanosView(APIView):
+    """GET /api/envios/cercanos/?lat=X&lon=Y&radio_km=Z → envíos PENDIENTES sin repartidor cerca de la ubicación"""
+    def get(self, request):
+        try:
+            lat_usuario = float(request.query_params.get('lat', 0))
+            lon_usuario = float(request.query_params.get('lon', 0))
+            radio_km    = float(request.query_params.get('radio_km', 10))
+        except (TypeError, ValueError):
+            return Response({'detail': 'lat, lon y radio_km son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from django.db.models import Q
+        from django.db.models.functions import Radians, Sin, Cos, ACos
+
+        # Envíos PENDIENTES sin repartidor asignado, filtrados por empresa_rut
+        empresa_rut = request.query_params.get('empresa_rut', '')
+        qs = Envio.objects.filter(
+            estado='PENDIENTE',
+            repartidor_id__isnull=True,
+        )
+        if empresa_rut:
+            qs = qs.filter(empresa_rut=empresa_rut)
+
+        envios_cercanos = []
+        for envio in qs:
+            dlat = float(envio.origen_lat) - lat_usuario
+            dlon = float(envio.origen_lon) - lon_usuario
+            # Aproximación: 1 grado ≈ 111km
+            dist_km = ((dlat ** 2 + dlon ** 2) ** 0.5) * 111
+            if dist_km <= radio_km:
+                envio_data = EnvioListSerializer(envio).data
+                envio_data['distancia_km_repartidor'] = round(dist_km, 2)
+                envios_cercanos.append(envio_data)
+
+        envios_cercanos.sort(key=lambda e: e['distancia_km_repartidor'])
+        return Response(envios_cercanos)
+
+
+class EnvioTomarView(APIView):
+    """POST /api/envios/<pk>/tomar/ → asigna repartidor y genera código de validación"""
+    def post(self, request, pk):
+        try:
+            envio = EnvioRepository.get_by_id(pk)
+        except Exception:
+            return Response({'detail': 'Envío no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        if envio.estado != 'PENDIENTE':
+            return Response({'detail': 'El envío no está disponible'}, status=status.HTTP_400_BAD_REQUEST)
+        if envio.repartidor_id:
+            return Response({'detail': 'El envío ya tiene un repartidor asignado'}, status=status.HTTP_400_BAD_REQUEST)
+
+        repartidor_id = request.data.get('repartidor_id')
+        if not repartidor_id:
+            return Response({'detail': 'repartidor_id es requerido'}, status=status.HTTP_400_BAD_REQUEST)
+
+        codigo = ''.join(str(random.randint(0, 9)) for _ in range(6))
+        envio.repartidor_id = int(repartidor_id)
+        envio.codigo_validacion = codigo
+        envio.estado = 'EN_RUTA'
+        envio.save(update_fields=['repartidor_id', 'codigo_validacion', 'estado'])
+        EventoRuta.objects.create(
+            envio=envio, tipo='ESTADO',
+            mensaje=f'Repartidor #{repartidor_id} tomó el envío. Código: {codigo}'
+        )
+        return Response({
+            'detail': 'Envío asignado correctamente',
+            'codigo_validacion': codigo,
+            'envio': EnvioListSerializer(envio).data,
+        })
+
+
+class EnvioValidarPickupView(APIView):
+    """POST /api/envios/<pk>/validar-pickup/ → valida código al recoger en tienda/bodega"""
+    def post(self, request, pk):
+        try:
+            envio = EnvioRepository.get_by_id(pk)
+        except Exception:
+            return Response({'detail': 'Envío no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        codigo = request.data.get('codigo_validacion', '')
+        if not codigo:
+            return Response({'detail': 'código de validación es requerido'}, status=status.HTTP_400_BAD_REQUEST)
+        if envio.codigo_validacion != codigo:
+            return Response({'detail': 'Código de validación incorrecto'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Pedido cambia a ENVIADO cuando el repartidor retira
+        envio.estado = 'EN_RUTA'
+        envio.save(update_fields=['estado'])
+        EventoRuta.objects.create(
+            envio=envio, tipo='ESTADO',
+            mensaje='Pickup validado — pedido en ruta'
+        )
+        return Response({
+            'detail': 'Pickup validado correctamente. Pedido en ruta.',
+            'envio': EnvioListSerializer(envio).data,
+        })
+
+
+class EnvioCompletarEntregaView(APIView):
+    """POST /api/envios/<pk>/completar/ → sube foto, cambia estado a COMPLETADO"""
+    def post(self, request, pk):
+        try:
+            envio = EnvioRepository.get_by_id(pk)
+        except Exception:
+            return Response({'detail': 'Envío no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        foto_url = request.data.get('foto_entrega_url', '')
+        if not foto_url:
+            return Response({'detail': 'foto_entrega_url es requerida'}, status=status.HTTP_400_BAD_REQUEST)
+
+        envio.foto_entrega_url = foto_url
+        envio.estado = 'COMPLETADO'
+        envio.save(update_fields=['foto_entrega_url', 'estado'])
+        EventoRuta.objects.create(
+            envio=envio, tipo='ESTADO',
+            mensaje='Entrega completada — foto registrada'
+        )
+        return Response({
+            'detail': 'Entrega completada exitosamente',
+            'envio': EnvioListSerializer(envio).data,
+        })
 
 
 # ─── Paradas ─────────────────────────────────────────────────────────────────

@@ -261,6 +261,35 @@ class MicroserviceGateway:
         url = f"{settings.MS_ENVIOS_URL}/api/conductores/{pk}/"
         return _cb_envios.call(lambda: safe_request('DELETE', url))
 
+    # Bodega espacio
+    @staticmethod
+    def get_bodega_espacio(pk):
+        url = f"{settings.MS_INVENTARIO_URL}/api/bodegas/{pk}/espacio/"
+        return _cb_inventario.call(lambda: safe_request('GET', url))
+
+    # Envíos cercanos
+    @staticmethod
+    def get_envios_cercanos(lat, lon, radio_km=10, empresa_rut=None):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/cercanos/?lat={lat}&lon={lon}&radio_km={radio_km}"
+        if empresa_rut:
+            url += f"&empresa_rut={empresa_rut}"
+        return _cb_envios.call(lambda: safe_request('GET', url))
+
+    @staticmethod
+    def tomar_envio(pk, data):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/{pk}/tomar/"
+        return _cb_envios.call(lambda: safe_request('POST', url, json=data))
+
+    @staticmethod
+    def validar_pickup_envio(pk, data):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/{pk}/validar-pickup/"
+        return _cb_envios.call(lambda: safe_request('POST', url, json=data))
+
+    @staticmethod
+    def completar_entrega_envio(pk, data):
+        url = f"{settings.MS_ENVIOS_URL}/api/envios/{pk}/completar/"
+        return _cb_envios.call(lambda: safe_request('POST', url, json=data))
+
     # Estado de los circuit breakers
     @staticmethod
     def get_circuit_states():

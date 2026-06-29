@@ -3,6 +3,7 @@ from .views import (
     EnvioListView, EnvioDetailView,
     EnvioEstadoView, EnvioPosicionView, EnvioRutaView,
     EnvioEnCursoView, EnvioPorPedidoView,
+    EnvioCercanosView, EnvioTomarView, EnvioValidarPickupView, EnvioCompletarEntregaView,
     ParadaEstadoView,
     ConductorListView, ConductorDetailView,
 )
@@ -16,6 +17,10 @@ urlpatterns = [
     path('envios/<int:pk>/ruta/',             EnvioRutaView.as_view()),
     path('envios/en-curso/',                  EnvioEnCursoView.as_view()),
     path('envios/pedido/<int:pedido_id>/',    EnvioPorPedidoView.as_view()),
+    path('envios/cercanos/',                  EnvioCercanosView.as_view()),
+    path('envios/<int:pk>/tomar/',            EnvioTomarView.as_view()),
+    path('envios/<int:pk>/validar-pickup/',   EnvioValidarPickupView.as_view()),
+    path('envios/<int:pk>/completar/',        EnvioCompletarEntregaView.as_view()),
 
     # Paradas
     path('paradas/<int:pk>/estado/',          ParadaEstadoView.as_view()),
