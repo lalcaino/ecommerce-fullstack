@@ -28,10 +28,14 @@ ENVIO_TO_PEDIDO = {
 
 
 def sincronizar_envio_desde_pedido(nuevo_estado_pedido):
+    if not isinstance(nuevo_estado_pedido, str):
+        return None
     return PEDIDO_TO_ENVIO.get(nuevo_estado_pedido)
 
 
 def sincronizar_pedido_desde_envio(nuevo_estado_envio):
+    if not isinstance(nuevo_estado_envio, str):
+        return None
     return ENVIO_TO_PEDIDO.get(nuevo_estado_envio)
 
 

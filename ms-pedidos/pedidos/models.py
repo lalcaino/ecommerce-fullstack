@@ -29,6 +29,11 @@ class Tienda(models.Model):
 
 
 class Pedido(models.Model):
+    ORIGEN_CHOICES = [
+        ('tienda', 'Despacho desde tienda'),
+        ('bodega', 'Despacho desde bodega'),
+    ]
+
     empresa_rut       = models.CharField(max_length=20, blank=True, db_index=True)
     cliente           = models.CharField(max_length=200)
     email_cliente     = models.EmailField()
@@ -40,6 +45,9 @@ class Pedido(models.Model):
     total             = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     notas             = models.TextField(blank=True)
     tienda            = models.ForeignKey(Tienda, null=True, blank=True, on_delete=models.SET_NULL, related_name='pedidos')
+    origen_despacho   = models.CharField(max_length=10, choices=ORIGEN_CHOICES, default='tienda')
+    bodega_origen_id  = models.PositiveIntegerField(null=True, blank=True, help_text='ID de bodega si origen_despacho=bodega')
+    codigo_validacion = models.CharField(max_length=6, blank=True, help_text='Código de 6 dígitos para retirar en tienda/bodega')
     fecha_creacion    = models.DateTimeField(auto_now_add=True)
     fecha_update      = models.DateTimeField(auto_now=True)
 

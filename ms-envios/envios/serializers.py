@@ -42,12 +42,12 @@ class EnvioSerializer(serializers.ModelSerializer):
         model  = Envio
         fields = [
             'id', 'empresa_rut', 'pedido_id', 'conductor', 'conductor_nombre', 'conductor_tel',
-            'tipo', 'estado',
+            'repartidor_id', 'tipo', 'estado',
             'origen_nombre', 'origen_lat', 'origen_lon',
             'destino_nombre', 'destino_lat', 'destino_lon',
             'pos_lat', 'pos_lon', 'pos_actualizada',
             'ruta_geojson', 'distancia_km', 'duracion_min',
-            'paradas', 'eventos',
+            'paradas', 'eventos', 'codigo_validacion', 'foto_entrega_url',
             'notas', 'fecha_estimada', 'fecha_creacion', 'fecha_update',
         ]
         read_only_fields = ['id', 'fecha_creacion', 'fecha_update', 'eventos']
@@ -69,12 +69,13 @@ class EnvioListSerializer(serializers.ModelSerializer):
         model  = Envio
         fields = [
             'id', 'empresa_rut', 'pedido_id', 'conductor', 'conductor_nombre',
-            'tipo', 'estado',
+            'repartidor_id', 'tipo', 'estado',
             'origen_nombre', 'origen_lat', 'origen_lon',
             'destino_nombre', 'destino_lat', 'destino_lon',
             'pos_lat', 'pos_lon', 'pos_actualizada',
             'distancia_km', 'duracion_min',
-            'paradas', 'fecha_estimada', 'fecha_creacion',
+            'paradas', 'codigo_validacion', 'foto_entrega_url',
+            'fecha_estimada', 'fecha_creacion',
         ]
         extra_kwargs = {
             'empresa_rut': {'required': False, 'allow_blank': True},

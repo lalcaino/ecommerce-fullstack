@@ -33,6 +33,7 @@ class PedidoSerializer(serializers.ModelSerializer):
     tienda_nombre     = serializers.CharField(source='tienda.nombre', read_only=True)
     tienda_ciudad     = serializers.CharField(source='tienda.ciudad', read_only=True)
     bodega_id         = serializers.IntegerField(source='tienda.bodega_id', read_only=True)
+    bodega_origen_id  = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model  = Pedido
@@ -40,7 +41,8 @@ class PedidoSerializer(serializers.ModelSerializer):
             'id', 'empresa_rut', 'cliente', 'email_cliente', 'telefono_cliente',
             'direccion_entrega', 'latitud_entrega', 'longitud_entrega', 'estado', 'total', 'notas',
             'items', 'tienda', 'tienda_nombre', 'tienda_ciudad',
-            'bodega_id', 'fecha_creacion', 'fecha_update',
+            'bodega_id', 'origen_despacho', 'bodega_origen_id', 'codigo_validacion',
+            'fecha_creacion', 'fecha_update',
         ]
         read_only_fields = ['id', 'total', 'fecha_creacion', 'fecha_update']
         extra_kwargs = {

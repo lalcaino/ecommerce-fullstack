@@ -255,14 +255,15 @@ def clasificar_mensaje(mensaje):
     saludos = ['hola', 'hello', 'hi', 'buenas', 'ola']
     if any(s in texto for s in saludos):
         return 'saludo'
+    if extraer_numero_pedido(mensaje):
+        return 'numero_pedido'
     if texto in ['1', 'estado', 'pedido']:
         return 'consulta_estado'
     if texto in ['2', 'envio', 'envío', 'tracking']:
         return 'consulta_envio'
-    if texto in ['3', 'problema', 'reclamo', 'ayuda']:
+    palabras_problema = ['problema', 'reclamo', 'ayuda']
+    if any(p in texto for p in palabras_problema):
         return 'problema'
-    if extraer_numero_pedido(mensaje):
-        return 'numero_pedido'
     return 'desconocido'
 
 
@@ -306,7 +307,7 @@ class TestChatbotClaseInvalida(unittest.TestCase):
         self.assertEqual(resultado, 5)  # re.findall extrae dígitos, no el signo
 
     def test_texto_largo_sin_numero(self):
-        self.assertEqual(clasificar_mensaje('necesito ayuda con mi compra reciente'), 'desconocido')
+        self.assertEqual(clasificar_mensaje('necesito ayuda con mi compra reciente'), 'problema')
 
     def test_mayusculas(self):
         self.assertEqual(clasificar_mensaje('HOLA'), 'saludo')

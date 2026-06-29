@@ -3,11 +3,15 @@ from .models import Producto, Bodega
 
 
 class BodegaSerializer(serializers.ModelSerializer):
-    total_productos = serializers.SerializerMethodField()
+    total_productos      = serializers.SerializerMethodField()
+    volumen_ocupado_cm3  = serializers.FloatField(read_only=True)
+    volumen_disponible_cm3 = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Bodega
-        fields = ['id', 'empresa_rut', 'nombre', 'direccion', 'capacidad', 'activa', 'creado_en', 'total_productos']
+        fields = ['id', 'empresa_rut', 'nombre', 'direccion', 'latitud', 'longitud',
+                  'capacidad', 'capacidad_volumen_cm3', 'volumen_ocupado_cm3',
+                  'volumen_disponible_cm3', 'activa', 'creado_en', 'total_productos']
         read_only_fields = ['id', 'creado_en']
         extra_kwargs = {
             'empresa_rut': {'required': False, 'allow_blank': True},
@@ -26,7 +30,7 @@ class ProductoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'empresa_rut', 'nombre', 'descripcion', 'tipo', 'precio',
             'stock', 'stock_minimo', 'bajo_stock',
-            'peso_kg', 'url_descarga', 'duracion_dias', 'imagen_url',
+            'peso_kg', 'volumen_cm3', 'url_descarga', 'duracion_dias', 'imagen_url',
             'activo', 'bodega', 'bodega_nombre',
             'creado_en', 'actualizado_en',
         ]

@@ -2,18 +2,33 @@ from django.db import models
 
 
 class Bodega(models.Model):
-    empresa_rut = models.CharField(max_length=20, blank=True, db_index=True)
-    nombre      = models.CharField(max_length=200)
-    direccion   = models.CharField(max_length=300)
-    capacidad   = models.PositiveIntegerField(default=0)
-    activa      = models.BooleanField(default=True)
-    creado_en   = models.DateTimeField(auto_now_add=True)
+    empresa_rut            = models.CharField(max_length=20, blank=True, db_index=True)
+    nombre                 = models.CharField(max_length=200)
+    direccion              = models.CharField(max_length=300)
+    latitud                = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitud               = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    capacidad              = models.PositiveIntegerField(default=0)
+    capacidad_volumen_cm3  = models.FloatField(default=0, help_text='Capacidad total en cm³')
+    activa                 = models.BooleanField(default=True)
+    creado_en              = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['nombre']
 
     def __str__(self):
         return self.nombre
+
+    @property
+    def volumen_ocupado_cm3(self):
+        from django.db.models import Sum, F
+        result = self.productos.aggregate(
+            total=Sum(F('volumen_cm3') * F('stock'))
+        )['total']
+        return result or 0.0
+
+    @property
+    def volumen_disponible_cm3(self):
+        return self.capacidad_volumen_cm3 - self.volumen_ocupado_cm3
 
 
 class Producto(models.Model):
@@ -31,6 +46,7 @@ class Producto(models.Model):
     stock          = models.PositiveIntegerField(default=0)
     stock_minimo   = models.PositiveIntegerField(default=5)
     peso_kg        = models.DecimalField(max_digits=8, decimal_places=3, null=True, blank=True)
+    volumen_cm3    = models.FloatField(default=0, help_text='Volumen unitario en cm³ (alto × ancho × largo)')
     url_descarga   = models.URLField(null=True, blank=True)
     duracion_dias  = models.PositiveIntegerField(null=True, blank=True)
     imagen_url     = models.URLField(null=True, blank=True)
