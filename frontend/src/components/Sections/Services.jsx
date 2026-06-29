@@ -11,7 +11,8 @@ import {
   FaTruck,
   FaRoute,
   FaBoxes,
-  FaClipboardList
+  FaClipboardList,
+  FaPhoneAlt,
 } from "react-icons/fa";
 
 // Assets
@@ -106,6 +107,23 @@ export default function Services() {
                 <p className="font13">
                   Automatiza órdenes y procesos logísticos para mejorar la
                   productividad de tu empresa.
+                </p>
+              </ServiceCard>
+            </ServiceBoxWrapper>
+
+            <ServiceBoxWrapper>
+              <ServiceCard>
+                <IconWrapper>
+                  <FaPhoneAlt size={42} />
+                </IconWrapper>
+
+                <h3 className="font20 extraBold">
+                  App Repartidor
+                </h3>
+
+                <p className="font13">
+                  Vista móvil tipo Uber Eats para repartidores: geolocalización,
+                  pedidos cercanos, código de validación y foto de entrega.
                 </p>
               </ServiceCard>
             </ServiceBoxWrapper>

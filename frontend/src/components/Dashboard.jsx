@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { DashboardRepository } from '../services/api'
-import { getToken } from '../services/authService'
+import { getToken, getUsuario } from '../services/authService'
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
@@ -111,6 +111,7 @@ export default function Dashboard() {
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState(null)
   const [exportando, setExportando] = useState(false)
+  const usuario    = getUsuario()
 
   useEffect(() => {
     DashboardRepository.getSummary()
@@ -158,11 +159,23 @@ export default function Dashboard() {
         <div className="dashboard-section" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: C.gray800 }}>
-               Panel de Control
+                Panel de Control
             </h1>
-            <p style={{ margin: '4px 0 0', color: C.gray500, fontSize: 14 }}>
-              {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <p style={{ margin: 0, color: C.gray500, fontSize: 14 }}>
+                {new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+              {usuario?.rol === 'superadmin' && (
+                <span style={{ background: '#8b5cf618', color: '#8b5cf6', border: '1px solid #8b5cf630', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>
+                  SuperAdmin
+                </span>
+              )}
+              {usuario?.nombre && (
+                <span style={{ background: C.brandLight, color: C.brand, border: `1px solid ${C.brand}30`, borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 600 }}>
+                  Admin: {usuario.nombre}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Botón exportar Excel */}
