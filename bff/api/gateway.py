@@ -269,6 +269,12 @@ class MicroserviceGateway:
         url = f"{settings.MS_ENVIOS_URL}/api/conductores/{pk}/"
         return _cb_envios.call(lambda: safe_request('DELETE', url))
 
+    # Inventario — ajustar stock
+    @staticmethod
+    def ajustar_stock_producto(pk, cantidad):
+        url = f"{settings.MS_INVENTARIO_URL}/api/productos/{pk}/ajuste-stock/"
+        return _cb_inventario.call(lambda: safe_request('POST', url, json={'cantidad': cantidad}))
+
     # Bodega espacio
     @staticmethod
     def get_bodega_espacio(pk, empresa_rut=None):
