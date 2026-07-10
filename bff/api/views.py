@@ -181,7 +181,7 @@ class PedidosListView(APIView):
             empresa_rut = _get_empresa_rut(request)
             data = dict(request.data)
             data['empresa_rut'] = empresa_rut
-            items = data.pop('items', [])
+            items = list(data.get('items') or [])
             pedido = MicroserviceGateway.create_pedido(data)
             for item in items:
                 producto_id = item.get('producto_id')
