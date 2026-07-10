@@ -450,7 +450,8 @@ class BodegaEspacioView(APIView):
 
     def get(self, request, pk):
         try:
-            return Response(MicroserviceGateway.get_bodega_espacio(pk))
+            empresa_rut = _get_empresa_rut(request)
+            return Response(MicroserviceGateway.get_bodega_espacio(pk, empresa_rut=empresa_rut))
         except Exception as exc:
             return _handle_error(exc)
 
