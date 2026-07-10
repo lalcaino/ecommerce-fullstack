@@ -17,8 +17,12 @@ from .serializers import (
 
 class ConductorListView(APIView):
     def get(self, request):
+        empresa_rut = request.query_params.get('empresa_rut')
         solo_disponibles = request.query_params.get('disponibles') == 'true'
-        qs = ConductorRepository.get_disponibles() if solo_disponibles else ConductorRepository.get_all()
+        if solo_disponibles:
+            qs = ConductorRepository.get_disponibles(empresa_rut=empresa_rut)
+        else:
+            qs = ConductorRepository.get_all(empresa_rut=empresa_rut)
         return Response(ConductorSerializer(qs, many=True).data)
 
     def post(self, request):
@@ -61,7 +65,8 @@ class ConductorDetailView(APIView):
 
 class EnvioListView(APIView):
     def get(self, request):
-        envios = EnvioRepository.get_all()
+        empresa_rut = request.query_params.get('empresa_rut')
+        envios = EnvioRepository.get_all(empresa_rut=empresa_rut)
         return Response(EnvioListSerializer(envios, many=True).data)
 
     def post(self, request):
@@ -157,7 +162,8 @@ class EnvioRutaView(APIView):
 class EnvioEnCursoView(APIView):
     """GET /api/envios/en-curso/  → envíos activos para mapa en tiempo real"""
     def get(self, request):
-        envios = EnvioRepository.get_en_curso()
+        empresa_rut = request.query_params.get('empresa_rut')
+        envios = EnvioRepository.get_en_curso(empresa_rut=empresa_rut)
         return Response(EnvioListSerializer(envios, many=True).data)
 
 
