@@ -135,9 +135,14 @@ class BodegaEspacioView(APIView):
             return Response({'detail': 'Bodega no encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
         from django.db.models import Sum, F
-        ocupado = bodega.productos.aggregate(
+        empresa_rut = request.query_params.get('empresa_rut')
+        qs = bodega.productos
+        if empresa_rut:
+            qs = qs.filter(empresa_rut=empresa_rut)
+        ocupado = qs.aggregate(
             total=Sum(F('volumen_cm3') * F('stock'))
         )['total'] or 0.0
+        total_productos = qs.count()
 
         return Response({
             'bodega_id': bodega.id,
@@ -146,5 +151,5 @@ class BodegaEspacioView(APIView):
             'volumen_ocupado_cm3': float(ocupado),
             'volumen_disponible_cm3': bodega.capacidad_volumen_cm3 - float(ocupado),
             'porcentaje_ocupado': round((float(ocupado) / bodega.capacidad_volumen_cm3 * 100), 1) if bodega.capacidad_volumen_cm3 > 0 else 0,
-            'total_productos': bodega.productos.count(),
+            'total_productos': total_productos,
         })
