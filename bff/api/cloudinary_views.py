@@ -128,13 +128,19 @@ class SubirImagenProductoView(APIView):
         if imagen.size > 5 * 1024 * 1024:
             return Response({'detail': 'La imagen no puede superar los 5MB.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        url_imagen = subir_imagen_cloudinary(
-            imagen,
-            carpeta='smartlogix/productos',
-            public_id=f'producto_{pk}',
-        )
+        try:
+            url_imagen = subir_imagen_cloudinary(
+                imagen,
+                carpeta='smartlogix/productos',
+                public_id=f'producto_{pk}',
+            )
+        except Exception as exc:
+            return Response({'detail': f'Error al subir imagen a Cloudinary: {exc}'}, status=status.HTTP_502_BAD_GATEWAY)
 
-        MicroserviceGateway.patch_producto(pk, {'imagen_url': url_imagen})
+        try:
+            MicroserviceGateway.patch_producto(pk, {'imagen_url': url_imagen})
+        except Exception as exc:
+            return Response({'detail': f'Imagen subida a Cloudinary pero no se pudo actualizar el producto: {exc}'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response({
             'detail':    'Imagen subida exitosamente.',
