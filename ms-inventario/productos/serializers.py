@@ -9,7 +9,7 @@ class BodegaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Bodega
-        fields = ['id', 'empresa_rut', 'nombre', 'direccion', 'latitud', 'longitud',
+        fields = ['id', 'empresa_rut', 'nombre', 'direccion',
                   'capacidad', 'capacidad_volumen_cm3', 'volumen_ocupado_cm3',
                   'volumen_disponible_cm3', 'activa', 'creado_en', 'total_productos']
         read_only_fields = ['id', 'creado_en']
