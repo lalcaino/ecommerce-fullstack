@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class CircuitBreaker:
-    def __init__(self, failure_threshold=3, timeout=30):
+    def __init__(self, failure_threshold=3, timeout=10):
         self.failure_threshold = failure_threshold
         self.timeout = timeout
         self.failure_count = 0
@@ -54,13 +54,21 @@ def _headers():
 def safe_request(method, url, **kwargs):
     try:
         r = requests.request(method, url, headers=_headers(), timeout=2, **kwargs)
-        r.raise_for_status()
+        if not r.ok:
+            detail = r.json().get('detail', r.reason) if r.text else r.reason
+            raise RuntimeError(detail)
         if not r.text:
             return []
         return r.json()
+    except requests.exceptions.Timeout:
+        raise RuntimeError(f'El servicio no respondió a tiempo ({url})')
+    except requests.exceptions.ConnectionError:
+        raise RuntimeError(f'No se pudo conectar con el servicio ({url})')
+    except RuntimeError:
+        raise
     except Exception as e:
         logger.error('Gateway error %s %s → %s', method, url, e)
-        raise e
+        raise RuntimeError(str(e))
 
 
 class MicroserviceGateway:
@@ -263,8 +271,10 @@ class MicroserviceGateway:
 
     # Bodega espacio
     @staticmethod
-    def get_bodega_espacio(pk):
+    def get_bodega_espacio(pk, empresa_rut=None):
         url = f"{settings.MS_INVENTARIO_URL}/api/bodegas/{pk}/espacio/"
+        if empresa_rut:
+            url += f"?empresa_rut={empresa_rut}"
         return _cb_inventario.call(lambda: safe_request('GET', url))
 
     # Envíos cercanos
