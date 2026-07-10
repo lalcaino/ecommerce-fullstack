@@ -94,14 +94,16 @@ class BodegaRepository:
 
 class ProductoRepository:
     @staticmethod
-    def _validar_volumen_bodega(bodega_id, volumen_cm3, stock, exclude_pk=None):
+    def _validar_volumen_bodega(bodega_id, volumen_cm3, stock, exclude_pk=None, empresa_rut=None):
         if not bodega_id or not volumen_cm3:
             return
-        from django.db.models import Sum, F, Q
+        from django.db.models import Sum, F
         bodega = Bodega.objects.get(pk=bodega_id)
         if not bodega.capacidad_volumen_cm3:
             return
         qs = Producto.objects.filter(bodega_id=bodega_id)
+        if empresa_rut:
+            qs = qs.filter(empresa_rut=empresa_rut)
         if exclude_pk:
             qs = qs.exclude(pk=exclude_pk)
         ocupado = qs.aggregate(total=Sum(F('volumen_cm3') * F('stock')))['total'] or 0.0
@@ -126,21 +128,25 @@ class ProductoRepository:
 
     @staticmethod
     def create(data):
-        bodega_id = data.get('bodega')
-        volumen_cm3 = data.get('volumen_cm3') or 0
-        stock = data.get('stock') or 0
+        bodega = data.get('bodega')
+        bodega_id = bodega.pk if bodega else None
+        volumen_cm3 = float(data.get('volumen_cm3') or 0)
+        stock = int(data.get('stock') or 0)
+        empresa_rut = data.get('empresa_rut')
         if bodega_id and volumen_cm3:
-            ProductoRepository._validar_volumen_bodega(bodega_id, volumen_cm3, stock)
+            ProductoRepository._validar_volumen_bodega(bodega_id, volumen_cm3, stock, empresa_rut=empresa_rut)
         return Producto.objects.create(**data)
 
     @staticmethod
     def update(pk, data):
         old = Producto.objects.get(pk=pk)
-        bodega_id = data.get('bodega', old.bodega_id)
-        volumen_cm3 = data.get('volumen_cm3', old.volumen_cm3) or 0
-        stock = data.get('stock', old.stock) or 0
+        bodega = data.get('bodega')
+        bodega_id = bodega.pk if bodega else (old.bodega_id if old.bodega else None)
+        volumen_cm3 = float(data.get('volumen_cm3', old.volumen_cm3) or 0)
+        stock = int(data.get('stock', old.stock) or 0)
+        empresa_rut = data.get('empresa_rut', old.empresa_rut)
         if bodega_id and volumen_cm3:
-            ProductoRepository._validar_volumen_bodega(bodega_id, volumen_cm3, stock, exclude_pk=pk)
+            ProductoRepository._validar_volumen_bodega(bodega_id, volumen_cm3, stock, exclude_pk=pk, empresa_rut=empresa_rut)
         Producto.objects.filter(pk=pk).update(**data)
         return Producto.objects.get(pk=pk)
 
