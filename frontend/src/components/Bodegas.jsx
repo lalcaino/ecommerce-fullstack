@@ -62,9 +62,6 @@ function Btn({ onClick, children, variant = 'primary', small = false }) {
 }
 
 function BodegaCard({ bodega, onDelete, onEdit }) {
-  const coords = bodega.latitud && bodega.longitud
-    ? `${parseFloat(bodega.latitud).toFixed(4)}, ${parseFloat(bodega.longitud).toFixed(4)}`
-    : null
   return (
     <div className="bodega-card" style={{
       background: C.white, borderRadius: 16,
@@ -89,11 +86,6 @@ function BodegaCard({ bodega, onDelete, onEdit }) {
              <span style={{ color: C.gray400 }}> ({bodega.porcentaje_ocupado || Math.round((bodega.volumen_ocupado_cm3 || 0) / bodega.capacidad_volumen_cm3 * 100)}%)</span>
            )}
         </p>
-        {coords && (
-          <p style={{ margin: '2px 0', fontSize: 12, color: C.gray400 }}>
-           {coords}
-          </p>
-        )}
         <p style={{ margin: '6px 0 0', fontSize: 12, color: C.gray400 }}>
           Productos almacenados: <strong>{bodega.total_productos ?? 0}</strong>
         </p>
@@ -153,14 +145,6 @@ function NuevaBodegaForm({ inicial, onSubmit, onCancel }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label style={labelStyle}>Capacidad volumen (cm³)</label>
           <input type="number" name="capacidad_volumen_cm3" value={form.capacidad_volumen_cm3} onChange={change} style={inputStyle} />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={labelStyle}>Latitud</label>
-          <input name="latitud" value={form.latitud} onChange={change} placeholder="Ej: -33.4567" style={inputStyle} />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={labelStyle}>Longitud</label>
-          <input name="longitud" value={form.longitud} onChange={change} placeholder="Ej: -70.6543" style={inputStyle} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: 'span 2' }}>
           <label style={labelStyle}>Dirección</label>
