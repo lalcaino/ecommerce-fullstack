@@ -181,7 +181,17 @@ class PedidosListView(APIView):
             empresa_rut = _get_empresa_rut(request)
             data = dict(request.data)
             data['empresa_rut'] = empresa_rut
-            return Response(MicroserviceGateway.create_pedido(data), status=status.HTTP_201_CREATED)
+            items = data.pop('items', [])
+            pedido = MicroserviceGateway.create_pedido(data)
+            for item in items:
+                producto_id = item.get('producto_id')
+                cantidad = item.get('cantidad', 0)
+                if producto_id and cantidad:
+                    try:
+                        MicroserviceGateway.ajustar_stock_producto(producto_id, -cantidad)
+                    except Exception as e:
+                        logger.warning('No se pudo ajustar stock producto %s: %s', producto_id, e)
+            return Response(pedido, status=status.HTTP_201_CREATED)
         except Exception as exc:
             return _handle_error(exc)
 
@@ -199,6 +209,19 @@ class PedidosDetailView(APIView):
         try:
             empresa_rut    = _get_empresa_rut(request)
             nuevo_estado   = request.data.get('estado', '')
+            if nuevo_estado == 'CANCELADO':
+                try:
+                    pedido_actual = MicroserviceGateway.get_pedido(pk)
+                    for item in (pedido_actual.get('items') or []):
+                        producto_id = item.get('producto_id')
+                        cantidad = item.get('cantidad', 0)
+                        if producto_id and cantidad:
+                            try:
+                                MicroserviceGateway.ajustar_stock_producto(producto_id, cantidad)
+                            except Exception as e:
+                                logger.warning('No se pudo restaurar stock producto %s: %s', producto_id, e)
+                except Exception as e:
+                    logger.warning('No se pudieron restaurar stocks al cancelar pedido %s: %s', pk, e)
             pedido_actualizado = MicroserviceGateway.patch_pedido(pk, request.data)
             if nuevo_estado:
                 _sincronizar_envio_desde_pedido(pk, nuevo_estado, pedido_actualizado, empresa_rut)
