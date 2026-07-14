@@ -61,6 +61,7 @@ export default function VistaRepartidor() {
   const [historial, setHistorial] = useState([])
   const [cargandoHistorial, setCargandoHistorial] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [pedidoInfo, setPedidoInfo] = useState(null)
 
   const mostrarToast = (msg, color = C.success) => {
     setToast({ msg, color })
@@ -102,13 +103,30 @@ export default function VistaRepartidor() {
 
   useEffect(() => { fetchEnviosCercanos() }, [fetchEnviosCercanos])
 
+  // Auto-cargar reparto activo si el repartidor ya tomó uno
+  useEffect(() => {
+    if (!usuario?.id) return
+    apiBFF('/envios/').then(data => {
+      const activo = Array.isArray(data) ? data.find(e =>
+        e.repartidor_id === usuario.id &&
+        e.estado !== 'COMPLETADO' &&
+        e.estado !== 'CANCELADO'
+      ) : null
+      if (activo) {
+        setSeleccionado(activo)
+        apiBFF(`/pedidos/${activo.pedido_id}/`).then(setPedidoInfo).catch(() => {})
+        setVista('mapa')
+      }
+    }).catch(() => {})
+  }, [usuario?.id])
+
   // Cargar historial del repartidor
   const fetchHistorial = async () => {
     setCargandoHistorial(true)
     try {
       const data = await apiBFF('/envios/')
       const misEnvios = Array.isArray(data)
-        ? data.filter(e => e.repartidor_id === usuario?.id || e.estado === 'COMPLETED')
+        ? data.filter(e => e.repartidor_id === usuario?.id)
         : []
       setHistorial(misEnvios.slice(0, 20))
     } catch { }
@@ -123,9 +141,10 @@ export default function VistaRepartidor() {
         method: 'POST',
         body: JSON.stringify({ repartidor_id: usuario?.id }),
       })
-      setSeleccionado({ ...envio, ...data.envio, codigo_validacion: data.codigo_validacion })
-      setVista('codigo')
-      mostrarToast(`Código: ${data.codigo_validacion} — entrégalo en tienda/bodega`)
+      setSeleccionado({ ...envio, ...data.envio })
+      apiBFF(`/pedidos/${envio.pedido_id}/`).then(setPedidoInfo).catch(() => {})
+      setVista('mapa')
+      mostrarToast('Pedido tomado. ¡Dirígete al destino!')
     } catch (err) {
       mostrarToast(err.message, C.error)
     } finally {
@@ -210,6 +229,7 @@ export default function VistaRepartidor() {
 
   const volverALista = () => {
     setSeleccionado(null)
+    setPedidoInfo(null)
     setVista('lista')
     setCodigoInput('')
     setCodigoError('')
@@ -281,6 +301,23 @@ export default function VistaRepartidor() {
               </div>
             )}
 
+            {pedidoInfo && (
+              <div style={{ background: '#f0f4ff', borderRadius: 10, padding: 12, marginBottom: 12, border: '1px solid #d0ddf0' }}>
+                <p style={{ margin: '0 0 6px', fontSize: 12, color: C.gray500 }}>Cliente</p>
+                <p style={{ margin: '0 0 2px', fontWeight: 600, fontSize: 14, color: C.gray800 }}>👤 {pedidoInfo.cliente}</p>
+                {pedidoInfo.telefono_cliente && (
+                  <p style={{ margin: '0 0 2px', fontSize: 13, color: C.gray700 }}>
+                    📞 <a href={`tel:${pedidoInfo.telefono_cliente}`} style={{ color: C.info, textDecoration: 'none' }}>{pedidoInfo.telefono_cliente}</a>
+                  </p>
+                )}
+                {pedidoInfo.email_cliente && (
+                  <p style={{ margin: 0, fontSize: 13, color: C.gray700 }}>
+                    ✉️ <a href={`mailto:${pedidoInfo.email_cliente}`} style={{ color: C.info, textDecoration: 'none' }}>{pedidoInfo.email_cliente}</a>
+                  </p>
+                )}
+              </div>
+            )}
+
             {seleccionado.distancia_km && (
               <div style={{ background: C.brandLight, borderRadius: 10, padding: 12, marginBottom: 12, display: 'flex', gap: 16 }}>
                 <div style={{ textAlign: 'center', flex: 1 }}>
@@ -297,9 +334,13 @@ export default function VistaRepartidor() {
             )}
 
             <button onClick={handleAbrirWaze} style={{
-              ...styles.btnPrimary, background: '#00D8FF', color: '#fff', marginBottom: 12,
+              width: '100%', border: 'none', borderRadius: 12, padding: '16px 0', marginBottom: 12,
+              background: 'linear-gradient(135deg, #33CCFF 0%, #1A8CFF 100%)',
+              color: '#fff', fontSize: 17, fontWeight: 800, cursor: 'pointer',
+              fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(51,204,255,0.35)',
+              letterSpacing: '.3px',
             }}>
-              🗺️ Abrir en Waze
+              🛣️ Navegar con Waze
             </button>
 
             <p style={{ margin: '16px 0 8px', fontWeight: 700, fontSize: 14, color: C.gray800 }}>
@@ -350,6 +391,61 @@ export default function VistaRepartidor() {
           <button onClick={() => { volverALista(); fetchEnviosCercanos() }} style={{ ...styles.btnPrimary, width: '100%' }}>
             🏠 Volver al inicio
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Pantalla: Historial ────────────────────────────────────────
+  if (vista === 'historial') {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <button onClick={() => setVista('lista')} style={styles.backBtn}>←</button>
+          <span style={styles.headerTitle}>Historial de entregas</span>
+          <div style={{ width: 40 }} />
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+          {cargandoHistorial ? (
+            <div style={{ textAlign: 'center', padding: 40, color: C.gray400 }}>Cargando historial...</div>
+          ) : historial.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40 }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
+              <p style={{ fontWeight: 700, fontSize: 16, color: C.gray800, margin: '0 0 4px' }}>Sin entregas aún</p>
+              <p style={{ fontSize: 13, color: C.gray500, margin: 0 }}>Las entregas completadas aparecerán aquí</p>
+            </div>
+          ) : (
+            historial.map(envio => {
+              const estado = ESTADO_META[envio.estado] || { color: C.gray400, icon: '❓', label: envio.estado }
+              return (
+                <div key={envio.id} style={{
+                  background: C.white, borderRadius: 14, border: `1px solid ${C.gray200}`,
+                  borderLeft: `4px solid ${estado.color}`, padding: '14px 16px', marginBottom: 10,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: 15, color: C.gray800 }}>
+                      Envío #{envio.id}
+                    </p>
+                    <span style={{ background: estado.color + '18', color: estado.color, borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      {estado.icon} {estado.label}
+                    </span>
+                  </div>
+                  {envio.destino_nombre && (
+                    <p style={{ margin: '0 0 4px', fontSize: 13, color: C.gray600 }}>📍 {envio.destino_nombre}</p>
+                  )}
+                  {envio.pedido_id && (
+                    <p style={{ margin: 0, fontSize: 12, color: C.gray400 }}>Pedido #{envio.pedido_id}</p>
+                  )}
+                  {envio.fecha_actualizacion && (
+                    <p style={{ margin: '4px 0 0', fontSize: 11, color: C.gray400 }}>
+                      {new Date(envio.fecha_actualizacion).toLocaleString('es-CL')}
+                    </p>
+                  )}
+                </div>
+              )
+            })
+          )}
         </div>
       </div>
     )

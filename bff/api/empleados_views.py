@@ -31,18 +31,23 @@ class EmpleadosListView(APIView):
 
     def get(self, request):
         empresa_rut = _get_empresa_rut(request)
-        if not empresa_rut:
-            return Response({'detail': 'Sin empresa asociada.'}, status=status.HTTP_403_FORBIDDEN)
+        rol_usuario = _get_rol(request)
 
-        try:
-            empresa = Empresa.objects.get(rut=empresa_rut)
-        except Empresa.DoesNotExist:
-            return Response({'detail': 'Empresa no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
-
-        perfiles = PerfilUsuario.objects.filter(
-            empresa=empresa,
-            rol='repartidor'
-        ).select_related('user')
+        if rol_usuario == 'superadmin':
+            perfiles = PerfilUsuario.objects.filter(
+                rol='repartidor'
+            ).select_related('user', 'empresa')
+        else:
+            if not empresa_rut:
+                return Response({'detail': 'Sin empresa asociada.'}, status=status.HTTP_403_FORBIDDEN)
+            try:
+                empresa = Empresa.objects.get(rut=empresa_rut)
+            except Empresa.DoesNotExist:
+                return Response({'detail': 'Empresa no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+            perfiles = PerfilUsuario.objects.filter(
+                empresa=empresa,
+                rol='repartidor'
+            ).select_related('user')
 
         empleados = []
         for p in perfiles:
@@ -52,6 +57,8 @@ class EmpleadosListView(APIView):
                 'email':  p.user.email,
                 'rol':    p.rol,
                 'activo': p.user.is_active,
+                'empresa_rut': p.empresa.rut if p.empresa else None,
+                'empresa_nombre': p.empresa.razon_social if p.empresa else None,
             })
 
         return Response(empleados)
@@ -60,11 +67,11 @@ class EmpleadosListView(APIView):
         empresa_rut = _get_empresa_rut(request)
         rol_usuario = _get_rol(request)
 
+        if rol_usuario != 'admin' and rol_usuario != 'superadmin':
+            return Response({'detail': 'Solo los administradores pueden crear empleados.'}, status=status.HTTP_403_FORBIDDEN)
+
         if not empresa_rut:
             return Response({'detail': 'Sin empresa asociada.'}, status=status.HTTP_403_FORBIDDEN)
-
-        if rol_usuario != 'admin':
-            return Response({'detail': 'Solo los administradores pueden crear empleados.'}, status=status.HTTP_403_FORBIDDEN)
 
         nombre   = request.data.get('nombre', '').strip()
         email    = request.data.get('email', '').strip().lower()
@@ -113,11 +120,12 @@ class EmpleadoDetailView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
-    def _get_perfil(self, pk, empresa_rut):
+    def _get_perfil(self, pk, empresa_rut, rol_usuario=''):
         try:
-            perfil = PerfilUsuario.objects.select_related('user', 'empresa').get(
-                pk=pk, rol='repartidor', empresa__rut=empresa_rut
-            )
+            filters = {'pk': pk, 'rol': 'repartidor'}
+            if empresa_rut:
+                filters['empresa__rut'] = empresa_rut
+            perfil = PerfilUsuario.objects.select_related('user', 'empresa').get(**filters)
             return perfil, None
         except PerfilUsuario.DoesNotExist:
             return None, Response({'detail': 'Empleado no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
@@ -126,10 +134,10 @@ class EmpleadoDetailView(APIView):
         empresa_rut = _get_empresa_rut(request)
         rol_usuario = _get_rol(request)
 
-        if rol_usuario != 'admin':
+        if rol_usuario != 'admin' and rol_usuario != 'superadmin':
             return Response({'detail': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
 
-        perfil, err = self._get_perfil(pk, empresa_rut)
+        perfil, err = self._get_perfil(pk, empresa_rut, rol_usuario)
         if err: return err
 
         activo = request.data.get('activo')
@@ -149,10 +157,10 @@ class EmpleadoDetailView(APIView):
         empresa_rut = _get_empresa_rut(request)
         rol_usuario = _get_rol(request)
 
-        if rol_usuario != 'admin':
+        if rol_usuario != 'admin' and rol_usuario != 'superadmin':
             return Response({'detail': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
 
-        perfil, err = self._get_perfil(pk, empresa_rut)
+        perfil, err = self._get_perfil(pk, empresa_rut, rol_usuario)
         if err: return err
 
         perfil.user.delete()

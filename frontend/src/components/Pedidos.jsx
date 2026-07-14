@@ -140,7 +140,9 @@ function SelectorProductos({ productos, items, onChange }) {
   }
 
   const handleCantidad = (producto_id, cantidad) => {
-    const cant = Math.max(1, parseInt(cantidad) || 1)
+    const producto = productos.find(p => p.id === producto_id)
+    const maxStock = producto ? parseInt(producto.stock) || Infinity : Infinity
+    const cant = Math.max(1, Math.min(maxStock, parseInt(cantidad) || 1))
     onChange(items.map(i => i.producto_id === producto_id ? { ...i, cantidad: cant } : i))
   }
 
@@ -354,7 +356,7 @@ function NuevoPedidoForm({ tiendas, bodegas, productos, onSubmit, onCancel }) {
       {/* Productos */}
       <div style={{ marginBottom: 20 }}>
         <label style={{ ...labelStyle, display: 'block', marginBottom: 8 }}>
-          Productos {items.length > 0 && <span style={{ color: C.brand }}>({items.length} agregado{items.length !== 1 ? 's' : ''})</span>}
+          Productos {items.length > 0 && <span style={{ color: C.brand }}>({items.reduce((s, i) => s + (parseInt(i.cantidad) || 0), 0)} unidad{items.reduce((s, i) => s + (parseInt(i.cantidad) || 0), 0) !== 1 ? 'es' : ''})</span>}
         </label>
         {productos.length === 0 ? (
           <div style={{ background: C.gray100, borderRadius: 10, padding: '14px 16px', color: C.gray500, fontSize: 13, textAlign: 'center' }}>
@@ -538,7 +540,7 @@ export default function Pedidos() {
                     <span title={p.direccion_entrega} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.direccion_entrega || '—'}</span>
                   </td>
                   <td style={{ padding: '12px 14px', color: C.gray500, fontSize: 12 }}>
-                    {Array.isArray(p.items) && p.items.length > 0 ? `${p.items.length} producto${p.items.length !== 1 ? 's' : ''}` : '—'}
+                    {(() => { if (!Array.isArray(p.items) || p.items.length === 0) return '—'; const totalUds = p.items.reduce((s, i) => s + (parseInt(i.cantidad) || 0), 0); return `${totalUds} producto${totalUds !== 1 ? 's' : ''}` })()}
                   </td>
                   <td style={{ padding: '12px 14px', fontWeight: 700, color: C.gray800 }}>${parseFloat(p.total || 0).toLocaleString('es-CL')}</td>
                   <td style={{ padding: '12px 14px' }}><EstadoBadge estado={p.estado} /></td>

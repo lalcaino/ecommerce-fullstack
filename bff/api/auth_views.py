@@ -27,6 +27,7 @@ def generar_codigo_validacion():
 
 def get_tokens(user):
     refresh = RefreshToken.for_user(user)
+    refresh['user_id']    = user.id
     refresh['first_name'] = user.first_name
     refresh['email']      = user.email
 

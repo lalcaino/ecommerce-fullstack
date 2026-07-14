@@ -107,6 +107,7 @@ export function getUsuario() {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     return {
+      id:              payload.user_id      || null,
       nombre:          payload.first_name   || payload.username || 'Usuario',
       email:           payload.username     || '',
       rol:             payload.rol          || 'admin',

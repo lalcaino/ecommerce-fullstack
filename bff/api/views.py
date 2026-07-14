@@ -182,6 +182,21 @@ class PedidosListView(APIView):
             data = dict(request.data)
             data['empresa_rut'] = empresa_rut
             items = list(data.get('items') or [])
+
+            # Validar stock disponible antes de crear el pedido
+            for item in items:
+                producto_id = item.get('producto_id')
+                cantidad = item.get('cantidad', 0)
+                if not producto_id or not cantidad:
+                    continue
+                producto = MicroserviceGateway.get_producto(producto_id)
+                stock_actual = int(producto.get('stock', 0))
+                if cantidad > stock_actual:
+                    return Response(
+                        {'detail': f'Stock insuficiente para "{producto.get("nombre", "Producto")}": disponible {stock_actual}, solicitado {cantidad}.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
             pedido = MicroserviceGateway.create_pedido(data)
             for item in items:
                 producto_id = item.get('producto_id')

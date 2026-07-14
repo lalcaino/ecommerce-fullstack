@@ -59,8 +59,8 @@ export default function Empleados() {
   const [formError, setFormError] = useState('')
   const [saving,    setSaving]    = useState(false)
 
-  // Solo admins pueden ver esta sección
-  if (usuario?.rol !== 'admin') {
+  // Solo admins y superadmin pueden ver esta sección
+  if (usuario?.rol !== 'admin' && usuario?.rol !== 'superadmin') {
     return (
       <div style={{ padding: 40, textAlign: 'center', color: C.gray500 }}>
         <p style={{ fontSize: 16 }}>Sin acceso a esta sección.</p>

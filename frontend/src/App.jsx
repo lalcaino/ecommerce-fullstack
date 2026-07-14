@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import { Helmet } from 'react-helmet'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
@@ -19,23 +19,34 @@ import VistaRepartidor from './screens/VistaRepartidor'
 import { getUsuario, isAuthenticated } from './services/authService'
 import './style/index.css'
 
-// Rutas protegidas según rol
 function RutaProtegida({ children, soloAdmin = false }) {
   if (!isAuthenticated()) return <Navigate to="/login" replace />
   const usuario = getUsuario()
-  // Si es repartidor y quiere acceder a ruta de admin, redirigir a su vista
   if (soloAdmin && usuario?.rol === 'repartidor') {
     return <Navigate to="/repartidor" replace />
   }
-  // superadmin puede acceder a todo
   return children
 }
 
 function AppLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f4f7f6' }}>
-      <Sidebar />
-      <main style={{ flex: 1, overflow: 'auto' }}>
+      <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={setSidebarOpen} />
+      <main style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
+        <div style={{
+          display: 'none', padding: '10px 16px', background: '#fff',
+          borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 100,
+        }} className="mobile-header">
+          <button onClick={() => setSidebarOpen(true)} style={{
+            background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px 8px',
+          }}>
+            ☰
+          </button>
+          <img src="/src/assets/img/logo.png" alt="SmartLogix" style={{ height: 36, objectFit: 'contain' }} />
+          <div style={{ width: 40 }} />
+        </div>
         <Routes>
           <Route path="/dashboard"  element={<Dashboard />}  />
           <Route path="/inventario" element={<Inventario />} />
@@ -62,19 +73,16 @@ export default function App() {
 
       <BrowserRouter>
         <Routes>
-          {/* Públicas */}
           <Route path="/"         element={<Landing />}  />
           <Route path="/login"    element={<Login />}    />
           <Route path="/registro" element={<Registro />} />
 
-          {/* Vista repartidor — solo mobile, sin sidebar */}
           <Route path="/repartidor" element={
             <RutaProtegida>
               <VistaRepartidor />
             </RutaProtegida>
           } />
 
-          {/* Dashboard admin — solo para rol admin */}
           <Route path="/*" element={
             <RutaProtegida soloAdmin>
               <AppLayout />
